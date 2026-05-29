@@ -240,9 +240,9 @@
   <label class="form-label">رقم P.O</label>
   <div class="input-group">
     <input type="text" id="poNumber" class="form-control" placeholder="اكتب أو اعمل سكان للـ PO">
-    <button type="button" class="btn btn-primary" id="scanPoBtn">
-      <i class="fas fa-camera"></i>
-    </button>
+    <button type="button" class="btn btn-primary" id="scanPoBtn" style="cursor:pointer; z-index:10;">
+  <i class="fas fa-camera"></i>
+</button>
   </div>
 </div>
 
@@ -1087,7 +1087,60 @@
 
     currentScanRow = null;
   }
+// ========== سكان باركود رقم P.O ==========
+async function openPoScanner() {
+  let overlay = document.getElementById('scannerOverlay');
 
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'scannerOverlay';
+    overlay.className = 'scanner-overlay';
+    overlay.innerHTML = `
+      <div class="scanner-box">
+        <div id="reader"></div>
+        <button type="button" class="stop-scan-btn" onclick="closeScanner()">إغلاق الكاميرا</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  } else {
+    overlay.style.display = 'flex';
+  }
+
+  try {
+    if (scannerRunning && scanner) {
+      await scanner.stop();
+    }
+
+    scanner = new Html5Qrcode("reader");
+
+    await scanner.start(
+      { facingMode: "environment" },
+      {
+        fps: 12,
+        qrbox: { width: 280, height: 180 },
+        aspectRatio: 1.777
+      },
+      decodedText => {
+        const poInput = document.getElementById('poNumber');
+
+        if (poInput) {
+          poInput.value = decodedText;
+        }
+
+        closeScanner();
+      },
+      error => {
+        console.warn(error);
+      }
+    );
+
+    scannerRunning = true;
+  } catch (err) {
+    console.error(err);
+    alert('تعذر فتح الكاميرا للـ PO');
+    closeScanner();
+  }
+}
   // ========== حفظ الفاتورة ==========
   async function saveInvoice() {
     const customerSelect = document.getElementById('customerSelect');
@@ -1258,6 +1311,7 @@
       });
     }
      const scanPoBtn = document.getElementById('scanPoBtn');
+
 if (scanPoBtn) {
   scanPoBtn.addEventListener('click', function(e) {
     e.preventDefault();

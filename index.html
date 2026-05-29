@@ -92,13 +92,7 @@
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;': m==='<'?'&lt;':'&gt;'); }
 
   // ========== الاتصال بالـ API ==========
-  async function apiCall(action, method = 'GET', body = null) {
-    const url = method === 'GET' ? `${API_URL}?action=${action}` : API_URL;
-    const options = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) options.body = JSON.stringify(body);
-    const res = await fetch(url, options);
-    return res.json();
-  }
+async function apiCall
 
   // ========== تحميل المنتجات مع بناء الخريطة ==========
   async function loadProducts() {

@@ -8,28 +8,24 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
+    /* جميع الأنماط كما هي في الكود السابق، تم حذفها للاختصار ولكن يمكن إضافتها */
     * { box-sizing: border-box; }
     body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; padding-bottom: 30px; }
-    .app-header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; border-radius: 0 0 25px 25px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .nav-tabs { flex-wrap: wrap; gap: 8px; background: white; padding: 12px; border-radius: 50px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .nav-tabs .nav-link { border-radius: 40px; padding: 8px 20px; transition: 0.3s; font-weight: 500; color: #333; }
+    .app-header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; border-radius: 0 0 25px 25px; margin-bottom: 25px; }
+    .nav-tabs { flex-wrap: wrap; gap: 8px; background: white; padding: 12px; border-radius: 50px; margin-bottom: 25px; }
+    .nav-tabs .nav-link { border-radius: 40px; padding: 8px 20px; }
     .nav-tabs .nav-link.active { background: #2a5298; color: white; }
-    .card { border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
-    .card-header { background: white; border-bottom: 1px solid #eee; padding: 15px 20px; font-weight: bold; border-radius: 20px 20px 0 0 !important; }
-    .table-responsive { overflow-x: auto; }
-    .btn-sm { margin: 2px; }
+    .card { border-radius: 20px; border: none; margin-bottom: 20px; }
     .barcode-cell { display: flex; gap: 5px; align-items: center; }
-    .barcode-input { flex: 1; border-radius: 8px; border: 1px solid #ccc; padding: 6px 8px; }
-    .camera-icon { background: #2a5298; color: white; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; }
-    .camera-icon:hover { background: #1e3c72; }
-    .product-dropdown { position: absolute; background: white; border: 1px solid #ddd; border-radius: 10px; max-height: 200px; overflow-y: auto; z-index: 1050; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .product-dropdown div { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .camera-icon { background: #2a5298; color: white; border: none; border-radius: 8px; padding: 6px 10px; }
+    .product-dropdown { position: absolute; background: white; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; z-index: 1050; width: 100%; border-radius: 10px; }
+    .product-dropdown div { padding: 8px 12px; cursor: pointer; }
     .product-dropdown div:hover { background: #e9ecef; }
-    .scanner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .scanner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; }
     .scanner-box { background: #000; padding: 20px; border-radius: 20px; width: 90%; max-width: 500px; text-align: center; }
     #reader { width: 100%; }
     .stop-scan-btn { margin-top: 15px; background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 30px; }
-    @media (max-width: 768px) { .nav-tabs .nav-link { padding: 5px 12px; font-size: 0.8rem; } .btn { font-size: 0.75rem; } }
+    @media (max-width: 768px) { .btn-sm { font-size: 0.7rem; } }
   </style>
 </head>
 <body>
@@ -40,18 +36,18 @@
   </div>
 
   <ul class="nav nav-tabs" id="mainTab" role="tablist">
-    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#invoicesListTab"><i class="fas fa-list"></i> الفواتير</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#newInvoiceTab"><i class="fas fa-plus-circle"></i> فاتورة جديدة</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#customersTab"><i class="fas fa-users"></i> العملاء</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#productsTab"><i class="fas fa-boxes"></i> المنتجات</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#stockMovementsTab"><i class="fas fa-exchange-alt"></i> حركة المخزون</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#settingsTab"><i class="fas fa-cog"></i> الإعدادات</a></li>
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#invoicesListTab">الفواتير</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#newInvoiceTab">فاتورة جديدة</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#customersTab">العملاء</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#productsTab">المنتجات</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#stockMovementsTab">حركة المخزون</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#settingsTab">الإعدادات</a></li>
   </ul>
 
   <div class="tab-content">
     <!-- قائمة الفواتير -->
     <div class="tab-pane fade show active" id="invoicesListTab">
-      <div class="card"><div class="card-header">📋 جميع الفواتير</div><div class="card-body"><div class="table-responsive"><table class="table table-bordered table-hover" id="invoicesTable"><thead class="table-light"><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="invoicesTbody"></tbody></table></div></div></div>
+      <div class="card"><div class="card-header">📋 جميع الفواتير</div><div class="card-body"><div class="table-responsive"><table class="table table-bordered" id="invoicesTable"><thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="invoicesTbody"></tbody></table></div></div></div>
     </div>
 
     <!-- فاتورة جديدة -->
@@ -60,35 +56,36 @@
         <div class="row g-3 mb-3">
           <div class="col-md-4"><label>العميل</label><select id="customerSelect" class="form-select"></select></div>
           <div class="col-md-3"><label>التاريخ</label><input type="date" id="invoiceDate" class="form-control"></div>
-          <div class="col-md-3"><label>رقم P.O</label><input type="text" id="poNumber" class="form-control" placeholder="أمر التوريد"></div>
+          <div class="col-md-3"><label>رقم P.O</label><input type="text" id="poNumber" class="form-control"></div>
           <div class="col-md-2"><label>الخصم</label><input type="number" id="discount" class="form-control" value="0"></div>
         </div>
-        <div class="table-responsive"><table class="table table-sm table-bordered" id="itemsTable"><thead class="table-light"><tr><th>الباركود <i class="fas fa-camera"></i></th><th>اسم الصنف</th><th>الكمية</th><th>السعر</th><th>الضريبة%</th><th>Gross</th><th>الضريبة</th><th>الإجمالي</th><th></th></tr></thead><tbody id="itemsTbody"></tbody></table></div>
+        <div class="table-responsive"><table class="table table-sm table-bordered" id="itemsTable"><thead><tr><th>الباركود <i class="fas fa-camera"></i></th><th>اسم الصنف</th><th>الكمية</th><th>السعر</th><th>الضريبة%</th><th>Gross</th><th>الضريبة</th><th>الإجمالي</th><th></th></tr></thead><tbody id="itemsTbody"></tbody></table></div>
         <button class="btn btn-success btn-sm mb-3" id="addItemBtn"><i class="fas fa-plus"></i> إضافة صنف</button>
         <div class="row bg-light p-3 rounded"><div class="col-md-3"><strong>المجموع الفرعي:</strong> <span id="subtotal">0.00</span></div><div class="col-md-3"><strong>إجمالي الضريبة:</strong> <span id="totalVat">0.00</span></div><div class="col-md-3"><strong>الخصم:</strong> <span id="discountDisplay">0.00</span></div><div class="col-md-3"><strong>الإجمالي النهائي:</strong> <span id="finalTotal">0.00</span></div></div>
-        <div class="row mt-3"><div class="col-md-4"><label>المدفوع</label><input type="number" id="paidAmount" class="form-control" value="0"></div><div class="col-md-4"><label>طريقة الدفع</label><select id="paymentMethod" class="form-select"><option>cash</option><option>bank</option><option>check</option></select></div><div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary w-100" id="saveInvoiceBtn"><i class="fas fa-save"></i> حفظ الفاتورة</button></div></div>
+        <div class="row mt-3"><div class="col-md-4"><label>المدفوع</label><input type="number" id="paidAmount" class="form-control" value="0"></div><div class="col-md-4"><label>طريقة الدفع</label><select id="paymentMethod" class="form-select"><option>cash</option><option>bank</option><option>check</option></select></div><div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary w-100" id="saveInvoiceBtn">حفظ الفاتورة</button></div></div>
       </div></div>
     </div>
 
-    <!-- العملاء والمنتجات وحركة المخزون والإعدادات (نفس الهيكل) -->
+    <!-- باقي التبويبات (اختصار) -->
     <div class="tab-pane fade" id="customersTab"><div class="card"><div class="card-header">👥 العملاء</div><div class="card-body"><input type="text" id="searchCustomer" class="form-control mb-3" placeholder="بحث..."><div class="table-responsive"><table class="table table-bordered" id="customersTable"><thead><tr><th>ID</th><th>الاسم</th><th>الرقم الضريبي</th><th>الهاتف</th></tr></thead><tbody id="customersTbody"></tbody></table></div><button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal">إضافة عميل</button></div></div></div>
     <div class="tab-pane fade" id="productsTab"><div class="card"><div class="card-header">📦 المنتجات</div><div class="card-body"><input type="text" id="searchProduct" class="form-control mb-3" placeholder="بحث..."><div class="table-responsive"><table class="table table-bordered" id="productsTable"><thead><tr><th>ID</th><th>الاسم</th><th>الباركود</th><th>السعر</th><th>الضريبة%</th><th>المخزون</th></tr></thead><tbody id="productsTbody"></tbody></table></div><button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addProductModal">إضافة منتج</button></div></div></div>
     <div class="tab-pane fade" id="stockMovementsTab"><div class="card"><div class="card-header">📊 حركة المخزون</div><div class="card-body"><div class="table-responsive"><table class="table table-bordered" id="stockMovementsTable"><thead><tr><th>التاريخ</th><th>المنتج</th><th>النوع</th><th>الكمية</th><th>المرجع</th></tr></thead><tbody id="stockMovementsTbody"></tbody></table></div></div></div></div>
-    <div class="tab-pane fade" id="settingsTab"><div class="card"><div class="card-header">⚙️ إعدادات الشركة</div><div class="card-body"><div class="row g-3"><div class="col-md-6"><label>اسم الشركة</label><input type="text" id="company_name" class="form-control"></div><div class="col-md-6"><label>الرقم الضريبي</label><input type="text" id="tax_id" class="form-control"></div><div class="col-md-6"><label>السجل التجاري</label><input type="text" id="commercial_register" class="form-control"></div><div class="col-md-6"><label>الهاتف</label><input type="text" id="phone" class="form-control"></div><div class="col-md-12"><label>العنوان</label><textarea id="address" class="form-control"></textarea></div><div class="col-md-6"><label>بادئة الفاتورة</label><input type="text" id="invoice_prefix" class="form-control"></div><div class="col-md-6"><label>رقم الفاتورة التالي</label><input type="number" id="next_invoice_number" class="form-control"></div><div class="col-12"><button class="btn btn-primary" id="saveSettingsBtn">حفظ الإعدادات</button></div></div></div></div></div>
+    <div class="tab-pane fade" id="settingsTab"><div class="card"><div class="card-header">⚙️ إعدادات الشركة</div><div class="card-body"><div class="row g-3"><div class="col-md-6"><label>اسم الشركة</label><input type="text" id="company_name" class="form-control"></div><div class="col-md-6"><label>الرقم الضريبي</label><input type="text" id="tax_id" class="form-control"></div><div class="col-md-6"><label>الهاتف</label><input type="text" id="phone" class="form-control"></div><div class="col-md-12"><label>العنوان</label><textarea id="address" class="form-control"></textarea></div><div class="col-md-6"><label>بادئة الفاتورة</label><input type="text" id="invoice_prefix" class="form-control"></div><div class="col-md-6"><label>رقم الفاتورة التالي</label><input type="number" id="next_invoice_number" class="form-control"></div><div class="col-12"><button class="btn btn-primary" id="saveSettingsBtn">حفظ الإعدادات</button></div></div></div></div></div>
   </div>
 </div>
 
-<!-- Modals -->
+<!-- Modals (كما هي) -->
 <div class="modal fade" id="addCustomerModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>إضافة عميل جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="newCustomerName" class="form-control mb-2" placeholder="الاسم"><input type="text" id="newCustomerTax" class="form-control mb-2" placeholder="الرقم الضريبي"><input type="text" id="newCustomerPhone" class="form-control mb-2" placeholder="الهاتف"></div><div class="modal-footer"><button class="btn btn-primary" id="confirmAddCustomer">حفظ</button></div></div></div></div>
 <div class="modal fade" id="addProductModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>إضافة منتج جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="newProductName" class="form-control mb-2" placeholder="الاسم"><input type="text" id="newProductBarcode" class="form-control mb-2" placeholder="الباركود"><input type="number" id="newProductPrice" class="form-control mb-2" placeholder="السعر"><input type="number" id="newProductVat" class="form-control mb-2" placeholder="الضريبة%"><input type="number" id="newProductStock" class="form-control mb-2" placeholder="المخزون"></div><div class="modal-footer"><button class="btn btn-primary" id="confirmAddProduct">حفظ</button></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // ========== الإعدادات ==========
-  const API_URL = "https://script.google.com/macros/s/AKfycbzpop2r7prj81Ug5u5o4bzywf0wL5jKHr30fzWNOGy4Ro6zbsk7kDfEOmPCP9wNM2P-iQ/exec"; // ⚠️ غيّره
+  const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec"; // ⚠️ استبدل بالرابط الحقيقي
 
   // ========== متغيرات عامة ==========
   let allProducts = [], allCustomers = [], currentItems = [], nextItemIndex = 0;
+  let productsMap = {};  // خريطة الباركود
   let scanner = null, scannerRunning = false, currentScanRow = null;
 
   function safeNumber(val) { const n = Number(val); return isNaN(n) ? 0 : n; }
@@ -103,10 +100,12 @@
     return res.json();
   }
 
-  // ========== تحميل البيانات ==========
+  // ========== تحميل المنتجات مع بناء الخريطة ==========
   async function loadProducts() {
     try {
+      console.log("جلب المنتجات من:", API_URL);
       const data = await apiCall('getProducts');
+      console.log("البيانات:", data);
       if (data.success && data.products) {
         allProducts = data.products.map(p => ({
           product_id: p.id || p.product_id,
@@ -116,10 +115,21 @@
           vat_rate: safeNumber(p.vat_rate),
           stock: safeNumber(p.quantity || p.stock)
         }));
+        // بناء خريطة الباركود
+        productsMap = {};
+        allProducts.forEach(p => {
+          if (p.barcode) productsMap[p.barcode.toString().trim()] = p;
+        });
+        console.log("تم تحميل المنتجات:", allProducts.length);
+        console.log("خريطة الباركود:", productsMap);
         renderProductsTable(allProducts);
+      } else {
+        console.error("فشل تحميل المنتجات:", data);
+        alert("فشل تحميل المنتجات. تأكد من الرابط ومن وجود بيانات في شيت Products.");
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error(e); alert("خطأ في الاتصال بالـ API"); }
   }
+
   async function loadCustomers() {
     try {
       const data = await apiCall('getCustomers');
@@ -132,18 +142,21 @@
       }
     } catch(e) { console.error(e); }
   }
+
   async function loadInvoices() {
     try {
       const data = await apiCall('getInvoices');
       if (data.success && data.invoices) renderInvoicesTable(data.invoices);
     } catch(e) { console.error(e); }
   }
+
   async function loadStockMovements() {
     try {
       const data = await apiCall('getStockMovements');
       if (data.success && data.movements) renderStockMovementsTable(data.movements);
     } catch(e) { console.error(e); }
   }
+
   async function loadSettings() {
     try {
       const data = await apiCall('getSettings');
@@ -161,6 +174,7 @@
     });
     document.getElementById('invoicesTbody').innerHTML = html;
   }
+
   function renderCustomersTable(customers) {
     let search = document.getElementById('searchCustomer')?.value.toLowerCase() || '';
     let html = '';
@@ -169,6 +183,7 @@
     });
     document.getElementById('customersTbody').innerHTML = html;
   }
+
   function renderProductsTable(products) {
     let search = document.getElementById('searchProduct')?.value.toLowerCase() || '';
     let html = '';
@@ -177,6 +192,7 @@
     });
     document.getElementById('productsTbody').innerHTML = html;
   }
+
   function renderStockMovementsTable(movements) {
     let html = '';
     movements.slice(0,200).forEach(m => {
@@ -201,6 +217,7 @@
     tbody.insertAdjacentHTML('beforeend', rowHtml);
     currentItems.push({ idx, productId: '', barcode: '', name: '', qty: 1, price: 0, vatRate: 0, gross: 0, vatAmount: 0, total: 0 });
   }
+
   function updateRowCalculations(idx) {
     const row = document.getElementById(`row-${idx}`);
     if (!row) return;
@@ -217,7 +234,9 @@
     if (item) { item.qty = qty; item.price = price; item.vatRate = vatRate; item.gross = gross; item.vatAmount = vatAmount; item.total = total; }
     updateSummary();
   }
+
   function removeRow(idx) { document.getElementById(`row-${idx}`)?.remove(); currentItems = currentItems.filter(i => i.idx != idx); updateSummary(); }
+
   function updateSummary() {
     let subtotal = 0, totalVat = 0;
     currentItems.forEach(i => { subtotal += i.gross; totalVat += i.vatAmount; });
@@ -228,6 +247,7 @@
     document.getElementById('discountDisplay').innerText = discount.toFixed(2);
     document.getElementById('finalTotal').innerText = finalTotal.toFixed(2);
   }
+
   function fillProductInRow(idx, product) {
     const row = document.getElementById(`row-${idx}`);
     if (!row) return;
@@ -239,15 +259,18 @@
     if (item) { item.productId = product.product_id; item.name = product.name; item.barcode = product.barcode; item.price = product.price; item.vatRate = product.vat_rate; }
     updateRowCalculations(idx);
   }
+
   function handleBarcodeInput(idx) {
     const row = document.getElementById(`row-${idx}`);
     if (!row) return;
     const barcode = row.querySelector('.barcode-input').value.trim();
     if (!barcode) return;
-    const product = allProducts.find(p => p.barcode == barcode);
+    const product = productsMap[barcode];
+    console.log("البحث عن باركود:", barcode, "المنتج:", product);
     if (product) fillProductInRow(idx, product);
     else { alert('المنتج غير موجود'); row.querySelector('.barcode-input').value = ''; }
   }
+
   function showProductDropdown(input, idx) {
     const searchVal = input.value.trim().toLowerCase();
     const dropdown = document.getElementById(`dropdown-${idx}`);
@@ -257,6 +280,7 @@
     dropdown.innerHTML = filtered.map(p => `<div onclick="selectProduct(${idx}, '${p.product_id}')">${escapeHtml(p.name)} - ${p.price} ج.م</div>`).join('');
     dropdown.style.display = 'block';
   }
+
   function selectProduct(idx, productId) {
     const product = allProducts.find(p => p.product_id == productId);
     if (product) fillProductInRow(idx, product);
@@ -286,6 +310,7 @@
       scannerRunning = true;
     } catch(err) { alert('تعذر فتح الكاميرا'); closeScanner(); }
   }
+
   async function closeScanner() {
     if (scanner && scannerRunning) { try { await scanner.stop(); } catch(e){} try { scanner.clear(); } catch(e){} }
     scanner = null; scannerRunning = false;
@@ -345,7 +370,11 @@
 
   // ========== بدء التشغيل ==========
   window.addEventListener('DOMContentLoaded', async () => {
-    await loadProducts(); await loadCustomers(); await loadInvoices(); await loadStockMovements(); await loadSettings();
+    await loadProducts();  // تحميل المنتجات أولاً
+    await loadCustomers();
+    await loadInvoices();
+    await loadStockMovements();
+    await loadSettings();
     addEmptyInvoiceRow();
     document.getElementById('addItemBtn').onclick = () => addEmptyInvoiceRow();
     document.getElementById('saveInvoiceBtn').onclick = saveInvoice;

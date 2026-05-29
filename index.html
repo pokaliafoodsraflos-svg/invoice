@@ -237,9 +237,14 @@
             </div>
 
             <div class="col-md-3">
-              <label class="form-label">رقم P.O</label>
-              <input type="text" id="poNumber" class="form-control">
-            </div>
+  <label class="form-label">رقم P.O</label>
+  <div class="input-group">
+    <input type="text" id="poNumber" class="form-control" placeholder="اكتب أو اعمل سكان للـ PO">
+    <button type="button" class="btn btn-primary" id="scanPoBtn">
+      <i class="fas fa-camera"></i>
+    </button>
+  </div>
+</div>
 
             <div class="col-md-2">
               <label class="form-label">الخصم</label>
@@ -1252,7 +1257,13 @@
         addEmptyInvoiceRow();
       });
     }
-
+     const scanPoBtn = document.getElementById('scanPoBtn');
+if (scanPoBtn) {
+  scanPoBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    openPoScanner();
+  });
+}
     const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
     if (saveInvoiceBtn) {
       saveInvoiceBtn.addEventListener('click', function(e) {

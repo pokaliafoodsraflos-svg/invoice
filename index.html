@@ -60,9 +60,9 @@
           <div class="col-md-2"><label>الخصم</label><input type="number" id="discount" class="form-control" value="0"></div>
         </div>
         <div class="table-responsive"><table class="table table-sm table-bordered" id="itemsTable"><thead><tr><th>الباركود <i class="fas fa-camera"></i></th><th>اسم الصنف</th><th>الكمية</th><th>السعر</th><th>الضريبة%</th><th>Gross</th><th>الضريبة</th><th>الإجمالي</th><th></th></tr></thead><tbody id="itemsTbody"></tbody></table></div>
-        <button class="btn btn-success btn-sm mb-3" id="addItemBtn"><i class="fas fa-plus"></i> إضافة صنف</button>
+        <button type="button" class="btn btn-success btn-sm mb-3" id="addItemBtn"><i class="fas fa-plus"></i> إضافة صنف</button>
         <div class="row bg-light p-3 rounded"><div class="col-md-3"><strong>المجموع الفرعي:</strong> <span id="subtotal">0.00</span></div><div class="col-md-3"><strong>إجمالي الضريبة:</strong> <span id="totalVat">0.00</span></div><div class="col-md-3"><strong>الخصم:</strong> <span id="discountDisplay">0.00</span></div><div class="col-md-3"><strong>الإجمالي النهائي:</strong> <span id="finalTotal">0.00</span></div></div>
-        <div class="row mt-3"><div class="col-md-4"><label>المدفوع</label><input type="number" id="paidAmount" class="form-control" value="0"></div><div class="col-md-4"><label>طريقة الدفع</label><select id="paymentMethod" class="form-select"><option>cash</option><option>bank</option><option>check</option></select></div><div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary w-100" id="saveInvoiceBtn">حفظ الفاتورة</button></div></div>
+        <div class="row mt-3"><div class="col-md-4"><label>المدفوع</label><input type="number" id="paidAmount" class="form-control" value="0"></div><div class="col-md-4"><label>طريقة الدفع</label><select id="paymentMethod" class="form-select"><option>cash</option><option>bank</option><option>check</option></select></div><div class="col-md-4 d-flex align-items-end"><button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">حفظ الفاتورة</button>
       </div></div>
     </div>
 
@@ -124,18 +124,31 @@ async function apiCall
     } catch(e) { console.error(e); alert("خطأ في الاتصال بالـ API"); }
   }
 
-  async function loadCustomers() {
-    try {
-      const data = await apiCall('getCustomers');
-      if (data.success && data.customers) {
-        allCustomers = data.customers;
-        const select = document.getElementById('customerSelect');
-        select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
-        allCustomers.forEach(c => select.innerHTML += `<option value="${c.customer_id}">${c.customer_name}</option>`);
-        renderCustomersTable(allCustomers);
-      }
-    } catch(e) { console.error(e); }
+async function loadCustomers() {
+  try {
+    const data = await apiCall('getCustomers');
+    console.log("Customers API:", data);
+
+    if (data.success && data.customers) {
+      allCustomers = data.customers;
+
+      const select = document.getElementById('customerSelect');
+      select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
+
+      allCustomers.forEach(c => {
+        select.innerHTML += `<option value="${c.customer_id}">${c.customer_name || c.name}</option>`;
+      });
+
+      renderCustomersTable(allCustomers);
+    } else {
+      console.error("فشل تحميل العملاء:", data);
+      alert("فشل تحميل العملاء. راجع شيت Customers.");
+    }
+  } catch(e) {
+    console.error("خطأ تحميل العملاء:", e);
+    alert("خطأ في تحميل العملاء من الـ API");
   }
+}
 
   async function loadInvoices() {
     try {
@@ -363,20 +376,47 @@ async function apiCall
   window.printInvoice = (id) => { alert('طباعة الفاتورة '+id); };
 
   // ========== بدء التشغيل ==========
-  window.addEventListener('DOMContentLoaded', async () => {
-    await loadProducts();  // تحميل المنتجات أولاً
-    await loadCustomers();
-    await loadInvoices();
-    await loadStockMovements();
-    await loadSettings();
+window.addEventListener('DOMContentLoaded', async () => {
+  // التاريخ
+  document.getElementById('invoiceDate').valueAsDate = new Date();
+  document.getElementById('todayDate').innerText = new Date().toLocaleDateString('ar-EG');
+
+  // ربط الأزرار فورًا قبل أي تحميل من API
+  document.getElementById('addItemBtn').addEventListener('click', function(e) {
+    e.preventDefault();
     addEmptyInvoiceRow();
-    document.getElementById('addItemBtn').onclick = () => addEmptyInvoiceRow();
-    document.getElementById('saveInvoiceBtn').onclick = saveInvoice;
-    document.getElementById('discount').addEventListener('input', updateSummary);
-    document.getElementById('invoiceDate').valueAsDate = new Date();
-    document.getElementById('todayDate').innerText = new Date().toLocaleDateString('ar-EG');
-    document.addEventListener('click', (e) => { if (!e.target.closest('.product-name-input')) document.querySelectorAll('.product-dropdown').forEach(d => d.style.display = 'none'); });
   });
+
+  document.getElementById('saveInvoiceBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    saveInvoice();
+  });
+
+  document.getElementById('discount').addEventListener('input', updateSummary);
+
+  document.getElementById('searchCustomer')?.addEventListener('input', () => renderCustomersTable(allCustomers));
+  document.getElementById('searchProduct')?.addEventListener('input', () => renderProductsTable(allProducts));
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.product-name-input')) {
+      document.querySelectorAll('.product-dropdown').forEach(d => d.style.display = 'none');
+    }
+  });
+
+  // أضف صف أول مباشرة
+  addEmptyInvoiceRow();
+
+  // تحميل البيانات بعد تفعيل الأزرار
+  const results = await Promise.allSettled([
+    loadProducts(),
+    loadCustomers(),
+    loadInvoices(),
+    loadStockMovements(),
+    loadSettings()
+  ]);
+
+  console.log("نتائج تحميل البيانات:", results);
+});
 </script>
 </body>
 </html>

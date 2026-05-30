@@ -1934,15 +1934,19 @@ window.printInvoice = async function(id) {
     const todayDate = document.getElementById('todayDate');
     if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
-    const customerSelect = document.getElementById('customerSelect');
-    if (customerSelect) {
-      customerSelect.addEventListener('change', function() {
-        updateBranchesForCustomer(this.value);
-        const searchBranch = document.getElementById('searchBranch');
+  const customerSelect = document.getElementById('customerSelect');
+if (customerSelect) {
+  customerSelect.addEventListener('change', function() {
+    updateBranchesForCustomer(this.value);
+  });
+}
 
+const searchBranch = document.getElementById('searchBranch');
 if (searchBranch) {
   searchBranch.addEventListener('input', function() {
     renderBranchesTable(allBranches);
+  });
+}
   });
 }
       });

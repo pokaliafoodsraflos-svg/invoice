@@ -2113,11 +2113,13 @@ window.addEventListener('DOMContentLoaded', async function() {
   if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
   const customerSelect = document.getElementById('customerSelect');
+
+if (customerSelect) {
   customerSelect.addEventListener('change', function() {
-  updateBranchesForCustomer(this.value);
-  repriceInvoiceItemsForSelectedCustomer();
-});
-  }
+    updateBranchesForCustomer(this.value);
+    repriceInvoiceItemsForSelectedCustomer();
+  });
+}
 
   const searchBranch = document.getElementById('searchBranch');
   if (searchBranch) {

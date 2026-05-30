@@ -265,28 +265,7 @@
   font-size: 13px;
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
 
-  #invoicePrintArea, #invoicePrintArea * {
-    visibility: visible;
-  }
-
-  #invoicePrintArea {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 25px;
-  }
-
-  .modal-footer,
-  .modal-header {
-    display: none !important;
-  }
-}
   </style>
 </head>
 
@@ -1609,9 +1588,10 @@ window.editInvoice = function(id) {
 
 window.printInvoice = async function(id) {
   await viewInvoice(id);
+
   setTimeout(() => {
-    window.print();
-  }, 500);
+    printCurrentInvoice();
+  }, 800);
 };
   // ========== بدء التشغيل ==========
   window.addEventListener('DOMContentLoaded', async function() {

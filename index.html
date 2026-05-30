@@ -446,11 +446,16 @@
       <a class="nav-link" data-bs-toggle="tab" href="#newInvoiceTab">فاتورة جديدة</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="tab" href="#customersTab">العملاء</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="tab" href="#productsTab">المنتجات</a>
-    </li>
+  <a class="nav-link" data-bs-toggle="tab" href="#customersTab">العملاء</a>
+</li>
+
+<li class="nav-item">
+  <a class="nav-link" data-bs-toggle="tab" href="#branchesTab">الفروع</a>
+</li>
+
+<li class="nav-item">
+  <a class="nav-link" data-bs-toggle="tab" href="#productsTab">المنتجات</a>
+</li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="tab" href="#stockMovementsTab">حركة المخزون</a>
     </li>
@@ -627,7 +632,32 @@
         </div>
       </div>
     </div>
+<!-- الفروع -->
+<div class="tab-pane fade" id="branchesTab">
+  <div class="card">
+    <div class="card-header">📍 فروع العملاء</div>
+    <div class="card-body">
 
+      <input type="text" id="searchBranch" class="form-control mb-3" placeholder="بحث عن فرع أو عميل...">
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover" id="branchesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>كود العميل</th>
+              <th>اسم العميل</th>
+              <th>اسم الفرع</th>
+              <th>اللوكيشن</th>
+            </tr>
+          </thead>
+          <tbody id="branchesTbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
     <!-- المنتجات -->
     <div class="tab-pane fade" id="productsTab">
       <div class="card">
@@ -842,7 +872,44 @@
       }[m];
     });
   }
+function renderBranchesTable(branches) {
+  const tbody = document.getElementById('branchesTbody');
+  if (!tbody) return;
 
+  const search = (document.getElementById('searchBranch')?.value || '').toLowerCase();
+
+  let html = '';
+
+  branches
+    .filter(b => {
+      const text = `
+        ${b.id || ""}
+        ${b.customer_id || ""}
+        ${b.customer_name || ""}
+        ${b.branch_name || ""}
+        ${b.location_link || ""}
+      `.toLowerCase();
+
+      return text.includes(search);
+    })
+    .forEach(b => {
+      const locationHtml = b.location_link
+        ? `<a href="${escapeHtml(b.location_link)}" target="_blank" class="btn btn-sm btn-outline-primary">فتح اللوكيشن</a>`
+        : `<span class="text-muted">لا يوجد</span>`;
+
+      html += `
+        <tr>
+          <td>${escapeHtml(b.id || "")}</td>
+          <td>${escapeHtml(b.customer_id || "")}</td>
+          <td>${escapeHtml(b.customer_name || "")}</td>
+          <td>${escapeHtml(b.branch_name || "")}</td>
+          <td>${locationHtml}</td>
+        </tr>
+      `;
+    });
+
+  tbody.innerHTML = html;
+}
   function formatDate(val) {
     if (!val) return "";
     const d = new Date(val);
@@ -955,28 +1022,28 @@
 
 
   // ========== تحميل الفروع ==========
-  async function loadBranches() {
-    try {
-      const data = await apiCall('getBranches');
+ async function loadBranches() {
+  try {
+    const data = await apiCall('getBranches');
 
-      if (data.success && Array.isArray(data.branches)) {
-        allBranches = data.branches.map(b => ({
-          id: b.id || b.branch_id || "",
-          customer_id: b.customer_id || "",
-          customer_name: b.customer_name || "",
-          branch_name: b.branch_name || b.Branches_name || b.branches_name || "",
-          location_link: b.location_link || b["location link"] || b.location || ""
-        }));
+    if (data.success && Array.isArray(data.branches)) {
+      allBranches = data.branches.map(b => ({
+        id: b.id || "",
+        customer_id: b.customer_id || "",
+        customer_name: b.customer_name || "",
+        branch_name: b.branch_name || b.Branches_name || "",
+        location_link: b.location_link || b["location link"] || ""
+      }));
 
-        console.log("Branches loaded:", allBranches);
-      } else {
-        console.error("فشل تحميل الفروع:", data);
-      }
-    } catch (e) {
-      console.error("خطأ تحميل الفروع:", e);
+      renderBranchesTable(allBranches);
+      console.log("Branches loaded:", allBranches);
+    } else {
+      console.error("فشل تحميل الفروع:", data);
     }
+  } catch (e) {
+    console.error("خطأ تحميل الفروع:", e);
   }
-
+}
   function updateBranchesForCustomer(customerId) {
     const branchSelect = document.getElementById('branchSelect');
     if (!branchSelect) return;
@@ -1871,6 +1938,13 @@ window.printInvoice = async function(id) {
     if (customerSelect) {
       customerSelect.addEventListener('change', function() {
         updateBranchesForCustomer(this.value);
+        const searchBranch = document.getElementById('searchBranch');
+
+if (searchBranch) {
+  searchBranch.addEventListener('input', function() {
+    renderBranchesTable(allBranches);
+  });
+}
       });
     }
 

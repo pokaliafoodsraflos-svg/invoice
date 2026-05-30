@@ -156,6 +156,137 @@
         border-radius: 20px;
       }
     }
+    .invoice-view-box {
+  background: white;
+  color: #222;
+  padding: 30px;
+  direction: rtl;
+  font-size: 14px;
+}
+
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 3px solid #2a5298;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.invoice-company h2 {
+  margin: 0;
+  color: #2a5298;
+  font-weight: bold;
+}
+
+.invoice-logo {
+  max-width: 120px;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+.invoice-title {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 26px;
+  font-weight: bold;
+  color: #2a5298;
+}
+
+.invoice-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.invoice-info-box {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.invoice-info-box h6 {
+  color: #2a5298;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.invoice-view-box table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.invoice-view-box th {
+  background: #2a5298;
+  color: white;
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.invoice-view-box td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.invoice-totals {
+  width: 320px;
+  margin-right: auto;
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.invoice-totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.invoice-totals-row:last-child {
+  border-bottom: none;
+  background: #2a5298;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.invoice-footer-note {
+  margin-top: 30px;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+  color: #555;
+  font-size: 13px;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #invoicePrintArea, #invoicePrintArea * {
+    visibility: visible;
+  }
+
+  #invoicePrintArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 25px;
+  }
+
+  .modal-footer,
+  .modal-header {
+    display: none !important;
+  }
+}
   </style>
 </head>
 
@@ -500,7 +631,32 @@
     </div>
   </div>
 </div>
+<!-- Modal عرض الفاتورة -->
+<div class="modal fade" id="invoiceViewModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">عرض الفاتورة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="invoicePrintArea" class="invoice-view-box">
+          <!-- سيتم بناء الفاتورة هنا بالكود -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+        <button type="button" class="btn btn-primary" onclick="printCurrentInvoice()">
+          <i class="fas fa-print"></i> طباعة
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -545,33 +701,39 @@
   }
 
   // ========== الاتصال بالـ API ==========
-  async function apiCall(action, method = 'GET', body = null) {
-    const url = method === 'GET'
-      ? `${API_URL}?action=${encodeURIComponent(action)}`
-      : API_URL;
+  async function apiCall(action, method = 'GET', body = null, params = {}) {
+  let url = API_URL;
 
-    const options = {
-      method: method,
-      redirect: "follow"
-    };
+  if (method === 'GET') {
+    const query = new URLSearchParams({
+      action: action,
+      ...params
+    });
 
-    if (method !== 'GET' && body) {
-      options.body = JSON.stringify(body);
-    }
-
-    const res = await fetch(url, options);
-    const text = await res.text();
-
-    console.log("API response:", action, text);
-
-    try {
-      return JSON.parse(text);
-    } catch (err) {
-      console.error("API returned non JSON:", text);
-      throw new Error("API returned non JSON");
-    }
+    url = `${API_URL}?${query.toString()}`;
   }
 
+  const options = {
+    method: method,
+    redirect: "follow"
+  };
+
+  if (method !== 'GET' && body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, options);
+  const text = await res.text();
+
+  console.log("API response:", action, text);
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("API returned non JSON:", text);
+    throw new Error("API returned non JSON");
+  }
+}
   // ========== تحميل المنتجات ==========
   async function loadProducts() {
     try {
@@ -1279,20 +1441,178 @@ async function openPoScanner() {
       alert('خطأ أثناء حفظ الإعدادات');
     }
   }
+let currentInvoiceForPrint = null;
 
+async function viewInvoice(invoiceId) {
+  try {
+    const data = await apiCall('getInvoiceDetails', 'GET', null, {
+      invoice_id: invoiceId
+    });
+
+    if (!data.success) {
+      alert(data.error || "تعذر تحميل الفاتورة");
+      return;
+    }
+
+    currentInvoiceForPrint = data;
+
+    const html = buildInvoiceViewHtml(data.invoice, data.items, data.settings || {});
+    document.getElementById('invoicePrintArea').innerHTML = html;
+
+    const modalEl = document.getElementById('invoiceViewModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+  } catch (e) {
+    console.error(e);
+    alert("حدث خطأ أثناء عرض الفاتورة");
+  }
+}
+
+function buildInvoiceViewHtml(invoice, items, settings) {
+  const companyName = settings.company_name || "اسم الشركة";
+  const companyTax = settings.tax_id || "";
+  const companyPhone = settings.phone || "";
+  const companyEmail = settings.company_email || "";
+  const companyAddress = settings.address || "";
+  const logoUrl = settings.logo_url || "";
+  const footerNote = settings.invoice_footer || "شكرًا لتعاملكم معنا";
+
+  const logoHtml = logoUrl
+    ? `<img src="${escapeHtml(logoUrl)}" class="invoice-logo" alt="Logo">`
+    : `<div style="width:120px;height:70px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999;">Logo</div>`;
+
+  const rowsHtml = items.map((item, index) => {
+    const quantity = safeNumber(item.quantity);
+    const price = safeNumber(item.price);
+    const vatRate = safeNumber(item.vat_rate);
+    const vatAmount = safeNumber(item.vat_amount);
+    const total = safeNumber(item.total);
+    const gross = quantity * price;
+
+    return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(item.barcode || "")}</td>
+        <td style="text-align:right;">${escapeHtml(item.product_name || item.name || "")}</td>
+        <td>${quantity}</td>
+        <td>${price.toFixed(2)}</td>
+        <td>${gross.toFixed(2)}</td>
+        <td>${vatRate}%</td>
+        <td>${vatAmount.toFixed(2)}</td>
+        <td>${total.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <div class="invoice-header">
+      <div class="invoice-company">
+        <h2>${escapeHtml(companyName)}</h2>
+        <div>${escapeHtml(companyAddress)}</div>
+        <div>هاتف: ${escapeHtml(companyPhone)}</div>
+        <div>البريد: ${escapeHtml(companyEmail)}</div>
+        <div>الرقم الضريبي: ${escapeHtml(companyTax)}</div>
+      </div>
+
+      <div>
+        ${logoHtml}
+      </div>
+    </div>
+
+    <div class="invoice-title">فاتورة مبيعات</div>
+
+    <div class="invoice-info-grid">
+      <div class="invoice-info-box">
+        <h6>بيانات الفاتورة</h6>
+        <div><strong>رقم الفاتورة:</strong> ${escapeHtml(invoice.invoice_id || "")}</div>
+        <div><strong>السيريال:</strong> ${escapeHtml(invoice.serial || "")}</div>
+        <div><strong>التاريخ:</strong> ${formatDate(invoice.date)}</div>
+        <div><strong>رقم P.O:</strong> ${escapeHtml(invoice.po_number || "")}</div>
+        <div><strong>الحالة:</strong> ${escapeHtml(invoice.status || "")}</div>
+      </div>
+
+      <div class="invoice-info-box">
+        <h6>بيانات العميل</h6>
+        <div><strong>اسم العميل:</strong> ${escapeHtml(invoice.customer_name || "")}</div>
+        <div><strong>كود العميل:</strong> ${escapeHtml(invoice.customer_id || "")}</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الباركود</th>
+          <th>الصنف</th>
+          <th>الكمية</th>
+          <th>السعر</th>
+          <th>Gross</th>
+          <th>الضريبة%</th>
+          <th>قيمة الضريبة</th>
+          <th>الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <div class="invoice-totals">
+      <div class="invoice-totals-row">
+        <span>المجموع الفرعي</span>
+        <span>${safeNumber(invoice.subtotal).toFixed(2)}</span>
+      </div>
+
+      <div class="invoice-totals-row">
+        <span>إجمالي الضريبة</span>
+        <span>${safeNumber(invoice.vat_total).toFixed(2)}</span>
+      </div>
+
+      <div class="invoice-totals-row">
+        <span>الخصم</span>
+        <span>${safeNumber(invoice.discount).toFixed(2)}</span>
+      </div>
+
+      <div class="invoice-totals-row">
+        <span>الإجمالي النهائي</span>
+        <span>${safeNumber(invoice.total).toFixed(2)}</span>
+      </div>
+
+      <div class="invoice-totals-row">
+        <span>المدفوع</span>
+        <span>${safeNumber(invoice.paid_amount).toFixed(2)}</span>
+      </div>
+
+      <div class="invoice-totals-row">
+        <span>المتبقي</span>
+        <span>${safeNumber(invoice.remaining_amount).toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div class="invoice-footer-note">
+      ${escapeHtml(footerNote)}
+    </div>
+  `;
+}
+
+function printCurrentInvoice() {
+  window.print();
+}
   // ========== أزرار مؤقتة ==========
-  window.viewInvoice = function(id) {
-    alert('عرض الفاتورة ' + id);
-  };
+  
+window.viewInvoice = viewInvoice;
 
-  window.editInvoice = function(id) {
-    alert('تعديل الفاتورة ' + id);
-  };
+window.editInvoice = function(id) {
+  alert('تعديل الفاتورة ' + id);
+};
 
-  window.printInvoice = function(id) {
-    alert('طباعة الفاتورة ' + id);
-  };
-
+window.printInvoice = async function(id) {
+  await viewInvoice(id);
+  setTimeout(() => {
+    window.print();
+  }, 500);
+};
   // ========== بدء التشغيل ==========
   window.addEventListener('DOMContentLoaded', async function() {
     console.log("App started");

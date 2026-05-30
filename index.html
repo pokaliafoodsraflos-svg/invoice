@@ -1924,115 +1924,112 @@ window.printInvoice = async function(id) {
     printCurrentInvoice();
   }, 1000);
 };
-  // ========== بدء التشغيل ==========
-  window.addEventListener('DOMContentLoaded', async function() {
-    console.log("App started");
+// ========== بدء التشغيل ==========
+window.addEventListener('DOMContentLoaded', async function() {
+  console.log("App started");
 
-    const invoiceDate = document.getElementById('invoiceDate');
-    if (invoiceDate) invoiceDate.valueAsDate = new Date();
+  const invoiceDate = document.getElementById('invoiceDate');
+  if (invoiceDate) invoiceDate.valueAsDate = new Date();
 
-    const todayDate = document.getElementById('todayDate');
-    if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
+  const todayDate = document.getElementById('todayDate');
+  if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
   const customerSelect = document.getElementById('customerSelect');
-if (customerSelect) {
-  customerSelect.addEventListener('change', function() {
-    updateBranchesForCustomer(this.value);
-  });
-}
-
-const searchBranch = document.getElementById('searchBranch');
-if (searchBranch) {
-  searchBranch.addEventListener('input', function() {
-    renderBranchesTable(allBranches);
-  });
-}
-  });
-}
-      });
-    }
-
-    const addItemBtn = document.getElementById('addItemBtn');
-    if (addItemBtn) {
-      addItemBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        addEmptyInvoiceRow();
-      });
-    }
-     const scanPoBtn = document.getElementById('scanPoBtn');
-
-if (scanPoBtn) {
-  scanPoBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    openPoScanner();
-  });
-}
-    const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
-    if (saveInvoiceBtn) {
-      saveInvoiceBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        saveInvoice();
-      });
-    }
-
-    const discountInput = document.getElementById('discount');
-    if (discountInput) {
-      discountInput.addEventListener('input', updateSummary);
-    }
-
-    const searchCustomer = document.getElementById('searchCustomer');
-    if (searchCustomer) {
-      searchCustomer.addEventListener('input', function() {
-        renderCustomersTable(allCustomers);
-      });
-    }
-
-    const searchProduct = document.getElementById('searchProduct');
-    if (searchProduct) {
-      searchProduct.addEventListener('input', function() {
-        renderProductsTable(allProducts);
-      });
-    }
-
-    const confirmAddCustomer = document.getElementById('confirmAddCustomer');
-    if (confirmAddCustomer) {
-      confirmAddCustomer.addEventListener('click', addCustomer);
-    }
-
-    const confirmAddProduct = document.getElementById('confirmAddProduct');
-    if (confirmAddProduct) {
-      confirmAddProduct.addEventListener('click', addProduct);
-    }
-
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    if (saveSettingsBtn) {
-      saveSettingsBtn.addEventListener('click', saveSettings);
-    }
-
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.product-name-input') && !e.target.closest('.product-dropdown')) {
-        document.querySelectorAll('.product-dropdown').forEach(d => {
-          d.style.display = 'none';
-        });
-      }
+  if (customerSelect) {
+    customerSelect.addEventListener('change', function() {
+      updateBranchesForCustomer(this.value);
     });
+  }
 
-    // صف أول تلقائي
-    addEmptyInvoiceRow();
+  const searchBranch = document.getElementById('searchBranch');
+  if (searchBranch) {
+    searchBranch.addEventListener('input', function() {
+      renderBranchesTable(allBranches);
+    });
+  }
 
-    // تحميل البيانات
-    const results = await Promise.allSettled([
-      loadProducts(),
-      loadCustomers(),
-      loadBranches(),
-      loadInvoices(),
-      loadStockMovements(),
-      loadSettings()
-    ]);
+  const addItemBtn = document.getElementById('addItemBtn');
+  if (addItemBtn) {
+    addItemBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      addEmptyInvoiceRow();
+    });
+  }
 
-    console.log("نتائج تحميل البيانات:", results);
-    console.log("App loaded");
+  const scanPoBtn = document.getElementById('scanPoBtn');
+  if (scanPoBtn) {
+    scanPoBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openPoScanner();
+    });
+  }
+
+  const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
+  if (saveInvoiceBtn) {
+    saveInvoiceBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      saveInvoice();
+    });
+  }
+
+  const discountInput = document.getElementById('discount');
+  if (discountInput) {
+    discountInput.addEventListener('input', updateSummary);
+  }
+
+  const searchCustomer = document.getElementById('searchCustomer');
+  if (searchCustomer) {
+    searchCustomer.addEventListener('input', function() {
+      renderCustomersTable(allCustomers);
+    });
+  }
+
+  const searchProduct = document.getElementById('searchProduct');
+  if (searchProduct) {
+    searchProduct.addEventListener('input', function() {
+      renderProductsTable(allProducts);
+    });
+  }
+
+  const confirmAddCustomer = document.getElementById('confirmAddCustomer');
+  if (confirmAddCustomer) {
+    confirmAddCustomer.addEventListener('click', addCustomer);
+  }
+
+  const confirmAddProduct = document.getElementById('confirmAddProduct');
+  if (confirmAddProduct) {
+    confirmAddProduct.addEventListener('click', addProduct);
+  }
+
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', saveSettings);
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.product-name-input') && !e.target.closest('.product-dropdown')) {
+      document.querySelectorAll('.product-dropdown').forEach(d => {
+        d.style.display = 'none';
+      });
+    }
   });
+
+  // صف أول تلقائي
+  addEmptyInvoiceRow();
+
+  // تحميل البيانات
+  const results = await Promise.allSettled([
+    loadProducts(),
+    loadCustomers(),
+    loadBranches(),
+    loadInvoices(),
+    loadStockMovements(),
+    loadSettings()
+  ]);
+
+  console.log("نتائج تحميل البيانات:", results);
+  console.log("App loaded");
+});
 </script>
 
 </body>

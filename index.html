@@ -846,6 +846,7 @@
 let allProducts = [];
 let allCustomers = [];
 let allBranches = [];
+let allPriceLists = [];
 let currentItems = [];
 let nextItemIndex = 0;
 let productsMap = {};
@@ -1072,7 +1073,28 @@ function renderBranchesTable(branches) {
       branchSelect.appendChild(option);
     });
   }
+async function loadPriceLists() {
+  try {
+    const data = await apiCall('getPriceLists');
 
+    if (data.success && Array.isArray(data.prices)) {
+      allPriceLists = data.prices.map(p => ({
+        customer_id: p.customer_id || "",
+        customer_name: p.customer_name || "",
+        product_id: p.product_id || "",
+        barcode: String(p.barcode || "").trim(),
+        product_name: p.product_name || "",
+        custom_price: safeNumber(p.custom_price || p.price)
+      }));
+
+      console.log("Price lists loaded:", allPriceLists);
+    } else {
+      console.error("فشل تحميل لستة الأسعار:", data);
+    }
+  } catch (e) {
+    console.error("خطأ تحميل لستة الأسعار:", e);
+  }
+}
   // ========== تحميل الفواتير ==========
   async function loadInvoices() {
     try {
@@ -1178,7 +1200,32 @@ function renderBranchesTable(branches) {
 
     tbody.innerHTML = html;
   }
+function getCustomerProductPrice(product) {
+  const customerId = document.getElementById('customerSelect')?.value || "";
 
+  if (!customerId || !product) {
+    return safeNumber(product?.price);
+  }
+
+  const barcode = String(product.barcode || "").trim();
+  const productId = String(product.product_id || "").trim();
+
+  const specialPrice = allPriceLists.find(p => {
+    const sameCustomer = String(p.customer_id).trim() === String(customerId).trim();
+
+    const sameProduct =
+      (barcode && String(p.barcode).trim() === barcode) ||
+      (productId && String(p.product_id).trim() === productId);
+
+    return sameCustomer && sameProduct;
+  });
+
+  if (specialPrice && safeNumber(specialPrice.custom_price) > 0) {
+    return safeNumber(specialPrice.custom_price);
+  }
+
+  return safeNumber(product.price);
+}
   // ========== عرض المنتجات ==========
   function renderProductsTable(products) {
     const tbody = document.getElementById('productsTbody');
@@ -1367,28 +1414,30 @@ function renderBranchesTable(branches) {
   }
 
   // ========== وضع المنتج داخل الصف ==========
-  function fillProductInRow(idx, product) {
-    const row = document.getElementById(`row-${idx}`);
-    if (!row || !product) return;
+ function fillProductInRow(idx, product) {
+  const row = document.getElementById(`row-${idx}`);
+  if (!row || !product) return;
 
-    row.querySelector('.product-name-input').value = product.name || "";
-    row.querySelector('.price-input').value = safeNumber(product.price);
-    row.querySelector('.vat-input').value = safeNumber(product.vat_rate);
-    row.querySelector('.barcode-input').value = product.barcode || "";
+  row.querySelector('.product-name-input').value = product.name || "";
 
-    const item = currentItems.find(i => i.idx === idx);
+  const finalPrice = getCustomerProductPrice(product);
 
-    if (item) {
-      item.productId = product.product_id || "";
-      item.name = product.name || "";
-      item.barcode = product.barcode || "";
-      item.price = safeNumber(product.price);
-      item.vatRate = safeNumber(product.vat_rate);
-    }
+  row.querySelector('.price-input').value = finalPrice;
+  row.querySelector('.vat-input').value = safeNumber(product.vat_rate);
+  row.querySelector('.barcode-input').value = product.barcode || "";
 
-    updateRowCalculations(idx);
+  const item = currentItems.find(i => i.idx === idx);
+
+  if (item) {
+    item.productId = product.product_id || "";
+    item.name = product.name || "";
+    item.barcode = product.barcode || "";
+    item.price = finalPrice;
+    item.vatRate = safeNumber(product.vat_rate);
   }
 
+  updateRowCalculations(idx);
+}
   // ========== البحث بالباركود ==========
   function handleBarcodeInput(idx) {
     const row = document.getElementById(`row-${idx}`);
@@ -1892,7 +1941,30 @@ function buildInvoiceViewHtml(invoice, items, settings) {
     </div>
   `;
 }
+function repriceInvoiceItemsForSelectedCustomer() {
+  currentItems.forEach(item => {
+    if (!item.barcode && !item.productId) return;
 
+    const product = allProducts.find(p =>
+      String(p.barcode).trim() === String(item.barcode).trim() ||
+      String(p.product_id).trim() === String(item.productId).trim()
+    );
+
+    if (!product) return;
+
+    const finalPrice = getCustomerProductPrice(product);
+
+    const row = document.getElementById(`row-${item.idx}`);
+    if (!row) return;
+
+    row.querySelector('.price-input').value = finalPrice;
+    item.price = finalPrice;
+
+    updateRowCalculations(item.idx);
+  });
+
+  updateSummary();
+}
 function printCurrentInvoice() {
   const invoicePrintArea = document.getElementById('invoicePrintArea');
   const printOnlyArea = document.getElementById('printOnlyArea');
@@ -2041,10 +2113,10 @@ window.addEventListener('DOMContentLoaded', async function() {
   if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
   const customerSelect = document.getElementById('customerSelect');
-  if (customerSelect) {
-    customerSelect.addEventListener('change', function() {
-      updateBranchesForCustomer(this.value);
-    });
+  customerSelect.addEventListener('change', function() {
+  updateBranchesForCustomer(this.value);
+  repriceInvoiceItemsForSelectedCustomer();
+});
   }
 
   const searchBranch = document.getElementById('searchBranch');
@@ -2124,14 +2196,15 @@ window.addEventListener('DOMContentLoaded', async function() {
   addEmptyInvoiceRow();
 
   // تحميل البيانات
-  const results = await Promise.allSettled([
-    loadProducts(),
-    loadCustomers(),
-    loadBranches(),
-    loadInvoices(),
-    loadStockMovements(),
-    loadSettings()
-  ]);
+const results = await Promise.allSettled([
+  loadProducts(),
+  loadCustomers(),
+  loadBranches(),
+  loadPriceLists(),
+  loadInvoices(),
+  loadStockMovements(),
+  loadSettings()
+]);
 
   console.log("نتائج تحميل البيانات:", results);
   console.log("App loaded");

@@ -494,7 +494,7 @@
         <div class="card-body">
 
           <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">العميل</label>
               <select id="customerSelect" class="form-select">
                 <option value="">جاري تحميل العملاء...</option>
@@ -502,11 +502,18 @@
             </div>
 
             <div class="col-md-3">
+              <label class="form-label">الفرع</label>
+              <select id="branchSelect" class="form-select">
+                <option value="">-- اختر الفرع --</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
               <label class="form-label">التاريخ</label>
               <input type="date" id="invoiceDate" class="form-control">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
   <label class="form-label">رقم P.O</label>
   <div class="input-group">
     <input type="text" id="poNumber" class="form-control" placeholder="اكتب أو اعمل سكان للـ PO">
@@ -806,6 +813,7 @@
   // ========== متغيرات عامة ==========
   let allProducts = [];
   let allCustomers = [];
+  let allBranches = [];
   let currentItems = [];
   let nextItemIndex = 0;
   let productsMap = {};
@@ -941,6 +949,56 @@
       console.error("خطأ تحميل العملاء:", e);
       alert("خطأ في تحميل العملاء من الـ API");
     }
+  }
+
+
+  // ========== تحميل الفروع ==========
+  async function loadBranches() {
+    try {
+      const data = await apiCall('getBranches');
+
+      if (data.success && Array.isArray(data.branches)) {
+        allBranches = data.branches.map(b => ({
+          id: b.id || b.branch_id || "",
+          customer_id: b.customer_id || "",
+          customer_name: b.customer_name || "",
+          branch_name: b.branch_name || b.Branches_name || b.branches_name || "",
+          location_link: b.location_link || b["location link"] || b.location || ""
+        }));
+
+        console.log("Branches loaded:", allBranches);
+      } else {
+        console.error("فشل تحميل الفروع:", data);
+      }
+    } catch (e) {
+      console.error("خطأ تحميل الفروع:", e);
+    }
+  }
+
+  function updateBranchesForCustomer(customerId) {
+    const branchSelect = document.getElementById('branchSelect');
+    if (!branchSelect) return;
+
+    branchSelect.innerHTML = '<option value="">-- اختر الفرع --</option>';
+
+    if (!customerId) return;
+
+    const customerBranches = allBranches.filter(b =>
+      String(b.customer_id).trim() === String(customerId).trim()
+    );
+
+    if (customerBranches.length === 0) {
+      branchSelect.innerHTML = '<option value="">لا توجد فروع لهذا العميل</option>';
+      return;
+    }
+
+    customerBranches.forEach(branch => {
+      const option = document.createElement('option');
+      option.value = branch.branch_name;
+      option.textContent = branch.branch_name;
+      option.dataset.location = branch.location_link || "";
+      branchSelect.appendChild(option);
+    });
   }
 
   // ========== تحميل الفواتير ==========
@@ -1449,8 +1507,17 @@ async function openPoScanner() {
     const customerId = customerSelect.value;
     const customerName = customerSelect.options[customerSelect.selectedIndex]?.text || "";
 
+    const branchSelect = document.getElementById('branchSelect');
+    const branchName = branchSelect?.value || "";
+    const branchLocation = branchSelect?.options[branchSelect.selectedIndex]?.dataset.location || "";
+
     if (!customerId) {
       alert('اختر عميلاً');
+      return;
+    }
+
+    if (!branchName) {
+      alert('اختر فرع العميل');
       return;
     }
 
@@ -1465,6 +1532,8 @@ async function openPoScanner() {
       action: 'saveInvoice',
       customer_id: customerId,
       customer_name: customerName,
+      branch_name: branchName,
+      branch_location: branchLocation,
       date: document.getElementById('invoiceDate').value,
       po_number: document.getElementById('poNumber').value,
       discount: safeNumber(document.getElementById('discount').value),
@@ -1676,6 +1745,8 @@ function buildInvoiceViewHtml(invoice, items, settings) {
         <h6>بيانات العميل</h6>
         <div><strong>اسم العميل:</strong> ${escapeHtml(invoice.customer_name || "")}</div>
         <div><strong>كود العميل:</strong> ${escapeHtml(invoice.customer_id || "")}</div>
+        <div><strong>الفرع:</strong> ${escapeHtml(invoice.branch_name || "")}</div>
+        <div><strong>رابط الموقع:</strong> ${escapeHtml(invoice.branch_location || "")}</div>
       </div>
     </div>
 
@@ -1785,6 +1856,13 @@ window.printInvoice = async function(id) {
     const todayDate = document.getElementById('todayDate');
     if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
+    const customerSelect = document.getElementById('customerSelect');
+    if (customerSelect) {
+      customerSelect.addEventListener('change', function() {
+        updateBranchesForCustomer(this.value);
+      });
+    }
+
     const addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) {
       addItemBtn.addEventListener('click', function(e) {
@@ -1857,6 +1935,7 @@ if (scanPoBtn) {
     const results = await Promise.allSettled([
       loadProducts(),
       loadCustomers(),
+      loadBranches(),
       loadInvoices(),
       loadStockMovements(),
       loadSettings()

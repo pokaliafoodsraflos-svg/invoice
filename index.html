@@ -843,12 +843,15 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbxuOBcqd0Tv9in54nojZAhipC40PgPb-rLik4pEAABQWALPDdF9j15ZgU88MaDze_-5/exec";
 
   // ========== متغيرات عامة ==========
-  let allProducts = [];
-  let allCustomers = [];
-  let allBranches = [];
-  let currentItems = [];
-  let nextItemIndex = 0;
-  let productsMap = {};
+let allProducts = [];
+let allCustomers = [];
+let allBranches = [];
+let currentItems = [];
+let nextItemIndex = 0;
+let productsMap = {};
+
+let editMode = false;
+let editingInvoiceId = null;
 
   let scanner = null;
   let scannerRunning = false;
@@ -1606,32 +1609,37 @@ async function openPoScanner() {
       return;
     }
 
-    const invoiceData = {
-      action: 'saveInvoice',
-      customer_id: customerId,
-      customer_name: customerName,
-      branch_name: branchName,
-      branch_location: branchLocation,
-      date: document.getElementById('invoiceDate').value,
-      po_number: document.getElementById('poNumber').value,
-      discount: safeNumber(document.getElementById('discount').value),
-      paidAmount: safeNumber(document.getElementById('paidAmount').value),
-      paymentMethod: document.getElementById('paymentMethod').value,
-      items: validItems.map(i => ({
-        barcode: i.barcode,
-        name: i.name,
-        quantity: i.qty,
-        price: i.price,
-        vat_rate: i.vatRate
-      }))
-    };
-
+   const invoiceData = {
+  action: editMode ? 'updateInvoice' : 'saveInvoice',
+  invoice_id: editingInvoiceId,
+  customer_id: customerId,
+  customer_name: customerName,
+  branch_name: branchName,
+  branch_location: branchLocation,
+  date: document.getElementById('invoiceDate').value,
+  po_number: document.getElementById('poNumber').value,
+  discount: safeNumber(document.getElementById('discount').value),
+  paidAmount: safeNumber(document.getElementById('paidAmount').value),
+  paymentMethod: document.getElementById('paymentMethod').value,
+  items: validItems.map(i => ({
+    barcode: i.barcode,
+    name: i.name,
+    quantity: i.qty,
+    price: i.price,
+    vat_rate: i.vatRate
+  }))
+};
     try {
       const res = await apiCall('saveInvoice', 'POST', invoiceData);
 
       if (res.success) {
-        alert(`تم حفظ الفاتورة رقم ${res.serial || res.invoiceId}`);
-        location.reload();
+  alert(editMode ? "تم تحديث الفاتورة بنجاح" : `تم حفظ الفاتورة رقم ${res.serial || res.invoiceId}`);
+
+  editMode = false;
+  editingInvoiceId = null;
+
+  location.reload();
+}
       } else {
         alert('خطأ: ' + (res.error || 'فشل حفظ الفاتورة'));
       }
@@ -1909,12 +1917,110 @@ function printCurrentInvoice() {
     window.print();
   }, 300);
 }
+  async function loadInvoiceForEdit(invoiceId) {
+  try {
+    const data = await apiCall('getInvoiceDetails', 'GET', null, {
+      invoice_id: invoiceId
+    });
+
+    if (!data.success) {
+      alert(data.error || "تعذر تحميل الفاتورة للتعديل");
+      return;
+    }
+
+    editMode = true;
+    editingInvoiceId = invoiceId;
+
+    const invoice = data.invoice;
+    const items = data.items || [];
+
+    // افتح تاب فاتورة جديدة
+    const tabTrigger = document.querySelector('a[href="#newInvoiceTab"]');
+    if (tabTrigger) {
+      const tab = new bootstrap.Tab(tabTrigger);
+      tab.show();
+    }
+
+    // تعبئة بيانات الفاتورة
+    document.getElementById('customerSelect').value = invoice.customer_id || "";
+
+    updateBranchesForCustomer(invoice.customer_id || "");
+
+    setTimeout(() => {
+      const branchSelect = document.getElementById('branchSelect');
+      if (branchSelect) {
+        branchSelect.value = invoice.branch_name || "";
+      }
+    }, 200);
+
+    const invoiceDate = document.getElementById('invoiceDate');
+    if (invoiceDate && invoice.date) {
+      const d = new Date(invoice.date);
+      if (!isNaN(d.getTime())) {
+        invoiceDate.value = d.toISOString().split('T')[0];
+      }
+    }
+
+    document.getElementById('poNumber').value = invoice.po_number || "";
+    document.getElementById('discount').value = safeNumber(invoice.discount);
+    document.getElementById('paidAmount').value = safeNumber(invoice.paid_amount);
+
+    // امسح الأصناف الحالية
+    document.getElementById('itemsTbody').innerHTML = "";
+    currentItems = [];
+    nextItemIndex = 0;
+
+    // أضف أصناف الفاتورة
+    items.forEach(item => {
+      addEmptyInvoiceRow();
+
+      const idx = nextItemIndex - 1;
+      const row = document.getElementById(`row-${idx}`);
+
+      if (row) {
+        row.querySelector('.barcode-input').value = item.barcode || "";
+        row.querySelector('.product-name-input').value = item.product_name || item.name || "";
+        row.querySelector('.qty-input').value = safeNumber(item.quantity);
+        row.querySelector('.price-input').value = safeNumber(item.price);
+        row.querySelector('.vat-input').value = safeNumber(item.vat_rate);
+
+        const currentItem = currentItems.find(i => i.idx === idx);
+        if (currentItem) {
+          currentItem.barcode = item.barcode || "";
+          currentItem.name = item.product_name || item.name || "";
+          currentItem.qty = safeNumber(item.quantity);
+          currentItem.price = safeNumber(item.price);
+          currentItem.vatRate = safeNumber(item.vat_rate);
+        }
+
+        updateRowCalculations(idx);
+      }
+    });
+
+    if (items.length === 0) {
+      addEmptyInvoiceRow();
+    }
+
+    const saveBtn = document.getElementById('saveInvoiceBtn');
+    if (saveBtn) {
+      saveBtn.innerText = "تحديث الفاتورة";
+      saveBtn.classList.remove("btn-primary");
+      saveBtn.classList.add("btn-warning");
+    }
+
+    updateSummary();
+
+  } catch (e) {
+    console.error(e);
+    alert("حدث خطأ أثناء تحميل الفاتورة للتعديل");
+  }
+}
   // ========== أزرار مؤقتة ==========
   
 window.viewInvoice = viewInvoice;
 
-window.editInvoice = function(id) {
-  alert('تعديل الفاتورة ' + id);
+window.editInvoice = async function(id) {
+  await loadInvoiceForEdit(id);
 };
 
 window.printInvoice = async function(id) {

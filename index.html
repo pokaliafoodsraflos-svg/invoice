@@ -359,13 +359,12 @@
     margin-bottom: 8px !important;
   }
 
-  #printOnlyArea table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    margin-top: 12px !important;
-    table-layout: fixed !important;
-  }
-
+#printOnlyArea table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin-top: 12px !important;
+  table-layout: auto !important;
+}
   #printOnlyArea th {
     background: #2a5298 !important;
     color: white !important;
@@ -382,7 +381,53 @@
     font-size: 11px !important;
     word-break: break-word !important;
   }
+/* ضبط عرض أعمدة جدول الأصناف في الطباعة */
+#printOnlyArea .invoice-view-box table th:nth-child(1),
+#printOnlyArea .invoice-view-box table td:nth-child(1) {
+  width: 4% !important;   /* # */
+}
 
+#printOnlyArea .invoice-view-box table th:nth-child(2),
+#printOnlyArea .invoice-view-box table td:nth-child(2) {
+  width: 14% !important;  /* الباركود */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(3),
+#printOnlyArea .invoice-view-box table td:nth-child(3) {
+  width: 30% !important;  /* اسم الصنف */
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(4),
+#printOnlyArea .invoice-view-box table td:nth-child(4) {
+  width: 7% !important;   /* الكمية */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(5),
+#printOnlyArea .invoice-view-box table td:nth-child(5) {
+  width: 8% !important;   /* السعر */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(6),
+#printOnlyArea .invoice-view-box table td:nth-child(6) {
+  width: 8% !important;   /* Gross */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(7),
+#printOnlyArea .invoice-view-box table td:nth-child(7) {
+  width: 7% !important;   /* الضريبة% */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(8),
+#printOnlyArea .invoice-view-box table td:nth-child(8) {
+  width: 10% !important;  /* قيمة الضريبة */
+}
+
+#printOnlyArea .invoice-view-box table th:nth-child(9),
+#printOnlyArea .invoice-view-box table td:nth-child(9) {
+  width: 12% !important;  /* الإجمالي */
+}
   #printOnlyArea .invoice-totals {
     width: 320px !important;
     margin-right: auto !important;

@@ -2405,12 +2405,18 @@ window.addEventListener('DOMContentLoaded', async function() {
   if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
   const customerSelect = document.getElementById('customerSelect');
-  if (customerSelect) {
-    customerSelect.addEventListener('change', function() {
-      updateBranchesForCustomer(this.value);
+
+if (customerSelect) {
+  customerSelect.addEventListener('change', function() {
+    updateBranchesForCustomer(this.value);
+
+    const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
+
+    if (useCustomerPrice) {
       repriceInvoiceItemsForSelectedCustomer();
-    });
-  }
+    }
+  });
+}
 
   const searchBranch = document.getElementById('searchBranch');
   if (searchBranch) {

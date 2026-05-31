@@ -1841,7 +1841,10 @@ async function openPoScanner() {
         item.price = poPrice;
       }
     }
-
+const item = currentItems.find(i => i.idx === idx);
+if (item) {
+  item.poPrice = poPrice;
+}
     updateRowCalculations(idx);
     return true;
   }
@@ -2234,17 +2237,27 @@ function buildInvoiceViewHtml(invoice, items, settings) {
   `;
 }
 function repriceInvoiceItemsForSelectedCustomer() {
+  const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
+
   currentItems.forEach(item => {
     if (!item.barcode && !item.productId) return;
 
     const product = allProducts.find(p =>
-      String(p.barcode).trim() === String(item.barcode).trim() ||
-      String(p.product_id).trim() === String(item.productId).trim()
+      String(p.barcode || '').trim() === String(item.barcode || '').trim() ||
+      String(p.product_id || '').trim() === String(item.productId || '').trim()
     );
 
     if (!product) return;
 
-    const finalPrice = getCustomerProductPrice(product);
+    let finalPrice = 0;
+
+    if (useCustomerPrice) {
+      finalPrice = getCustomerProductPrice(product);
+    } else if (safeNumber(item.poPrice) > 0) {
+      finalPrice = safeNumber(item.poPrice);
+    } else {
+      finalPrice = safeNumber(product.price);
+    }
 
     const row = document.getElementById(`row-${item.idx}`);
     if (!row) return;
@@ -2256,8 +2269,7 @@ function repriceInvoiceItemsForSelectedCustomer() {
   });
 
   updateSummary();
-}
-function printCurrentInvoice() {
+}function printCurrentInvoice() {
   const invoicePrintArea = document.getElementById('invoicePrintArea');
   const printOnlyArea = document.getElementById('printOnlyArea');
 
@@ -2404,18 +2416,24 @@ window.addEventListener('DOMContentLoaded', async function() {
   const todayDate = document.getElementById('todayDate');
   if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
-  const customerSelect = document.getElementById('customerSelect');
+
+
+const customerSelect = document.getElementById('customerSelect');
 
 if (customerSelect) {
   customerSelect.addEventListener('change', function() {
     updateBranchesForCustomer(this.value);
-
-    const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
-
-    if (useCustomerPrice) {
-      repriceInvoiceItemsForSelectedCustomer();
-    }
+    repriceInvoiceItemsForSelectedCustomer();
   });
+}
+
+const useCustomerPriceForPo = document.getElementById('useCustomerPriceForPo');
+
+if (useCustomerPriceForPo) {
+  useCustomerPriceForPo.addEventListener('change', function() {
+    repriceInvoiceItemsForSelectedCustomer();
+  });
+}
 }
 
   const searchBranch = document.getElementById('searchBranch');

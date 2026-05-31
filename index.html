@@ -1421,15 +1421,15 @@ function getCustomerProductPrice(product) {
   }
 
   // ========== وضع المنتج داخل الصف ==========
- function fillProductInRow(idx, product) {
+function fillProductInRow(idx, product) {
   const row = document.getElementById(`row-${idx}`);
   if (!row || !product) return;
 
   row.querySelector('.product-name-input').value = product.name || "";
 
-  const finalPrice = getCustomerProductPrice(product);
+  const finalPrice = safeNumber(getCustomerProductPrice(product));
 
-  row.querySelector('.price-input').value = safeNumber(finalPrice).toFixed(2);
+  row.querySelector('.price-input').value = finalPrice;
   row.querySelector('.vat-input').value = safeNumber(product.vat_rate);
   row.querySelector('.barcode-input').value = product.barcode || "";
 
@@ -1439,7 +1439,7 @@ function getCustomerProductPrice(product) {
     item.productId = product.product_id || "";
     item.name = product.name || "";
     item.barcode = product.barcode || "";
-    item.price = safeNumber(finalPrice);
+    item.price = finalPrice;
     item.vatRate = safeNumber(product.vat_rate);
   }
 

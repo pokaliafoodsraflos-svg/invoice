@@ -100,7 +100,32 @@
       border-radius: 10px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     }
+/* يخلي دروب داون المنتجات يظهر فوق الصفوف والأزرار */
+#newInvoiceTab .table-responsive {
+  overflow: visible !important;
+}
 
+#itemsTable {
+  overflow: visible !important;
+}
+
+#itemsTable tbody,
+#itemsTable tr,
+#itemsTable td {
+  overflow: visible !important;
+}
+
+#itemsTable td {
+  position: relative;
+}
+
+.product-dropdown {
+  z-index: 99999 !important;
+  position: absolute !important;
+  top: 100%;
+  right: 0;
+  left: 0;
+}
     .product-dropdown div {
       padding: 8px 12px;
       cursor: pointer;

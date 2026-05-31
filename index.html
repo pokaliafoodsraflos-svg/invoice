@@ -28,7 +28,16 @@
       border-radius: 0 0 25px 25px;
       margin-bottom: 25px;
     }
+.info-line {
+  direction: rtl;
+  text-align: right;
+}
 
+.ltr-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
     .nav-tabs {
       flex-wrap: wrap;
       gap: 8px;
@@ -1917,7 +1926,10 @@ function buildInvoiceViewHtml(invoice, items, settings) {
         <div><strong>رقم الفاتورة:</strong> ${escapeHtml(invoice.invoice_id || "")}</div>
         <div><strong>السيريال:</strong> ${escapeHtml(invoice.serial || "")}</div>
         <div><strong>التاريخ:</strong> ${formatDate(invoice.date)}</div>
-        <div><strong>رقم P.O:</strong> ${escapeHtml(invoice.po_number || "")}</div>
+        <div class="info-line">
+  <strong>رقم P.O:</strong>
+  <span dir="ltr" class="ltr-value">${escapeHtml(invoice.po_number || "")}</span>
+</div>
         <div><strong>الحالة:</strong> ${escapeHtml(invoice.status || "")}</div>
       </div>
 

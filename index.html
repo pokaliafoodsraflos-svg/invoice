@@ -1429,7 +1429,7 @@ function getCustomerProductPrice(product) {
 
   const finalPrice = getCustomerProductPrice(product);
 
-  row.querySelector('.price-input').value = finalPrice;
+  row.querySelector('.price-input').value = safeNumber(finalPrice).toFixed(2);
   row.querySelector('.vat-input').value = safeNumber(product.vat_rate);
   row.querySelector('.barcode-input').value = product.barcode || "";
 
@@ -1439,7 +1439,7 @@ function getCustomerProductPrice(product) {
     item.productId = product.product_id || "";
     item.name = product.name || "";
     item.barcode = product.barcode || "";
-    item.price = finalPrice;
+    item.price = safeNumber(finalPrice);
     item.vatRate = safeNumber(product.vat_rate);
   }
 

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
     * {
@@ -28,16 +29,7 @@
       border-radius: 0 0 25px 25px;
       margin-bottom: 25px;
     }
-.info-line {
-  direction: rtl;
-  text-align: right;
-}
 
-.ltr-value {
-  direction: ltr;
-  unicode-bidi: isolate;
-  display: inline-block;
-}
     .nav-tabs {
       flex-wrap: wrap;
       gap: 8px;
@@ -100,32 +92,7 @@
       border-radius: 10px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     }
-/* يخلي دروب داون المنتجات يظهر فوق الصفوف والأزرار */
-#newInvoiceTab .table-responsive {
-  overflow: visible !important;
-}
 
-#itemsTable {
-  overflow: visible !important;
-}
-
-#itemsTable tbody,
-#itemsTable tr,
-#itemsTable td {
-  overflow: visible !important;
-}
-
-#itemsTable td {
-  position: relative;
-}
-
-.product-dropdown {
-  z-index: 99999 !important;
-  position: absolute !important;
-  top: 100%;
-  right: 0;
-  left: 0;
-}
     .product-dropdown div {
       padding: 8px 12px;
       cursor: pointer;
@@ -393,12 +360,13 @@
     margin-bottom: 8px !important;
   }
 
-#printOnlyArea table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  margin-top: 12px !important;
-  table-layout: auto !important;
-}
+  #printOnlyArea table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 12px !important;
+    table-layout: fixed !important;
+  }
+
   #printOnlyArea th {
     background: #2a5298 !important;
     color: white !important;
@@ -415,53 +383,7 @@
     font-size: 11px !important;
     word-break: break-word !important;
   }
-/* ضبط عرض أعمدة جدول الأصناف في الطباعة */
-#printOnlyArea .invoice-view-box table th:nth-child(1),
-#printOnlyArea .invoice-view-box table td:nth-child(1) {
-  width: 4% !important;   /* # */
-}
 
-#printOnlyArea .invoice-view-box table th:nth-child(2),
-#printOnlyArea .invoice-view-box table td:nth-child(2) {
-  width: 14% !important;  /* الباركود */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(3),
-#printOnlyArea .invoice-view-box table td:nth-child(3) {
-  width: 30% !important;  /* اسم الصنف */
-  white-space: normal !important;
-  word-break: normal !important;
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(4),
-#printOnlyArea .invoice-view-box table td:nth-child(4) {
-  width: 7% !important;   /* الكمية */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(5),
-#printOnlyArea .invoice-view-box table td:nth-child(5) {
-  width: 8% !important;   /* السعر */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(6),
-#printOnlyArea .invoice-view-box table td:nth-child(6) {
-  width: 8% !important;   /* Gross */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(7),
-#printOnlyArea .invoice-view-box table td:nth-child(7) {
-  width: 7% !important;   /* الضريبة% */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(8),
-#printOnlyArea .invoice-view-box table td:nth-child(8) {
-  width: 10% !important;  /* قيمة الضريبة */
-}
-
-#printOnlyArea .invoice-view-box table th:nth-child(9),
-#printOnlyArea .invoice-view-box table td:nth-child(9) {
-  width: 12% !important;  /* الإجمالي */
-}
   #printOnlyArea .invoice-totals {
     width: 320px !important;
     margin-right: auto !important;
@@ -608,6 +530,12 @@
 </button>
   </div>
 </div>
+
+            <div class="col-md-2">
+              <label class="form-label">رفع P.O PDF</label>
+              <input type="file" id="poPdfUpload" class="form-control" accept="application/pdf,.pdf">
+              <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
+            </div>
 
             <div class="col-md-2">
               <label class="form-label">الخصم</label>
@@ -1710,6 +1638,261 @@ async function openPoScanner() {
     closeScanner();
   }
 }
+
+  // ========== رفع وقراءة ملف P.O PDF ==========
+  function setPoPdfStatus(message, isError = false) {
+    const status = document.getElementById('poPdfStatus');
+    if (!status) return;
+    status.textContent = message || '';
+    status.className = isError ? 'text-danger d-block mt-1' : 'text-muted d-block mt-1';
+  }
+
+  function normalizeArabicText(text) {
+    return String(text || '')
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  async function extractTextRowsFromPdf(file) {
+    if (!window.pdfjsLib) {
+      throw new Error('PDF.js library is not loaded');
+    }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const rows = [];
+    let fullText = '';
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+
+      const items = textContent.items
+        .map(item => ({
+          text: normalizeArabicText(item.str),
+          x: item.transform[4],
+          y: item.transform[5]
+        }))
+        .filter(item => item.text);
+
+      fullText += ' ' + items.map(item => item.text).join(' ');
+
+      items.sort((a, b) => b.y - a.y || a.x - b.x);
+
+      const grouped = [];
+      items.forEach(item => {
+        let row = grouped.find(r => Math.abs(r.y - item.y) <= 3);
+        if (!row) {
+          row = { y: item.y, items: [] };
+          grouped.push(row);
+        }
+        row.items.push(item);
+      });
+
+      grouped.forEach(row => {
+        row.items.sort((a, b) => a.x - b.x);
+        rows.push(row.items.map(item => item.text).join(' '));
+      });
+    }
+
+    return {
+      text: normalizeArabicText(fullText),
+      rows: rows.map(normalizeArabicText).filter(Boolean)
+    };
+  }
+
+  function parseOscarPoPdfText(pdfData) {
+    const text = pdfData.text || '';
+    const rows = pdfData.rows || [];
+
+    const poMatch = text.match(/PO-\d+/i);
+    const poNumber = poMatch ? poMatch[0].toUpperCase() : '';
+
+    let branchName = '';
+    const matchedBranch = allBranches.find(b => {
+      const name = String(b.branch_name || '').trim();
+      return name && text.toLowerCase().includes(name.toLowerCase());
+    });
+
+    if (matchedBranch) {
+      branchName = matchedBranch.branch_name || '';
+    } else {
+      const possibleBranch = rows.find(line => /\b[A-Za-z]+\b/.test(line) && line.includes('-') && !/PO-\d+/i.test(line));
+      branchName = possibleBranch || '';
+    }
+
+    const items = [];
+    const seen = new Set();
+
+    rows.forEach(line => {
+      const barcodeMatch = line.match(/\b\d{10,14}\b/);
+      if (!barcodeMatch) return;
+
+      const barcode = barcodeMatch[0];
+      if (seen.has(barcode)) return;
+
+      // Oscar table order after x-sorting is usually: total price quantity VAT unit description itemNo barcode rowNo
+      const tableNumbers = line.match(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/g) || [];
+      const decimalNumbers = tableNumbers
+        .map(n => n.replace(/,/g, ''))
+        .filter(n => /^\d+(?:\.\d+)?$/.test(n));
+
+      let quantity = 1;
+      let price = 0;
+
+      const beforeVatMatch = line.match(/([\d,]+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)\s+0%\s+PCS/i);
+      if (beforeVatMatch) {
+        price = safeNumber(beforeVatMatch[2].replace(/,/g, ''));
+        quantity = safeNumber(beforeVatMatch[3].replace(/,/g, ''));
+      } else {
+        const qtyCandidate = decimalNumbers.find(n => safeNumber(n) > 0 && safeNumber(n) <= 10000 && n.includes('.'));
+        quantity = safeNumber(qtyCandidate) || 1;
+      }
+
+      items.push({
+        barcode,
+        quantity,
+        priceFromPo: price,
+        rawLine: line
+      });
+
+      seen.add(barcode);
+    });
+
+    return { poNumber, branchName, items };
+  }
+
+  function selectCustomerAndBranchFromPo(branchName) {
+    if (!branchName) return false;
+
+    const branch = allBranches.find(b =>
+      String(b.branch_name || '').trim().toLowerCase() === String(branchName || '').trim().toLowerCase()
+    ) || allBranches.find(b =>
+      String(branchName || '').toLowerCase().includes(String(b.branch_name || '').trim().toLowerCase()) ||
+      String(b.branch_name || '').toLowerCase().includes(String(branchName || '').trim().toLowerCase())
+    );
+
+    if (!branch) return false;
+
+    const customerSelect = document.getElementById('customerSelect');
+    const branchSelect = document.getElementById('branchSelect');
+
+    if (customerSelect && branch.customer_id) {
+      customerSelect.value = branch.customer_id;
+      updateBranchesForCustomer(branch.customer_id);
+      repriceInvoiceItemsForSelectedCustomer();
+    }
+
+    if (branchSelect) {
+      branchSelect.value = branch.branch_name || '';
+    }
+
+    return true;
+  }
+
+  function clearInvoiceItems() {
+    const tbody = document.getElementById('itemsTbody');
+    if (tbody) tbody.innerHTML = '';
+    currentItems = [];
+    nextItemIndex = 0;
+    updateSummary();
+  }
+
+  function addProductFromPoItem(poItem) {
+    const product = productsMap[String(poItem.barcode || '').trim()];
+
+    addEmptyInvoiceRow();
+    const idx = nextItemIndex - 1;
+    const row = document.getElementById(`row-${idx}`);
+
+    if (product) {
+      fillProductInRow(idx, product);
+      row.querySelector('.qty-input').value = safeNumber(poItem.quantity) || 1;
+      updateRowCalculations(idx);
+      return true;
+    }
+
+    // لو الباركود غير موجود في المنتجات، نضيفه للمراجعة بدل ما نرميه
+    if (row) {
+      row.querySelector('.barcode-input').value = poItem.barcode || '';
+      row.querySelector('.product-name-input').value = 'غير موجود في المنتجات - راجع الصنف';
+      row.querySelector('.qty-input').value = safeNumber(poItem.quantity) || 1;
+      row.querySelector('.price-input').value = safeNumber(poItem.priceFromPo) || 0;
+    }
+
+    const item = currentItems.find(i => i.idx === idx);
+    if (item) {
+      item.barcode = poItem.barcode || '';
+      item.name = '';
+      item.qty = safeNumber(poItem.quantity) || 1;
+      item.price = safeNumber(poItem.priceFromPo) || 0;
+    }
+
+    updateRowCalculations(idx);
+    return false;
+  }
+
+  async function handlePoPdfUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setPoPdfStatus('جاري قراءة ملف الـ P.O...');
+
+      if (!allProducts.length) await loadProducts();
+      if (!allBranches.length) await loadBranches();
+      if (!allPriceLists.length) await loadPriceLists();
+
+      const pdfData = await extractTextRowsFromPdf(file);
+      const parsed = parseOscarPoPdfText(pdfData);
+
+      if (!parsed.poNumber && parsed.items.length === 0) {
+        alert('لم أقدر أقرأ بيانات واضحة من ملف الـ P.O. جرّب PDF أوضح أو ابعته للمراجعة.');
+        setPoPdfStatus('فشل قراءة بيانات واضحة من الملف', true);
+        return;
+      }
+
+      if (parsed.poNumber) {
+        document.getElementById('poNumber').value = parsed.poNumber;
+      }
+
+      const branchSelected = selectCustomerAndBranchFromPo(parsed.branchName);
+
+      if (parsed.items.length > 0) {
+        const shouldReplace = currentItems.some(i => i.name || i.barcode || safeNumber(i.qty) !== 1 || safeNumber(i.price) > 0)
+          ? confirm('هل تريد استبدال الأصناف الحالية بأصناف الـ P.O؟')
+          : true;
+
+        if (shouldReplace) clearInvoiceItems();
+
+        let matchedCount = 0;
+        parsed.items.forEach(poItem => {
+          if (addProductFromPoItem(poItem)) matchedCount++;
+        });
+
+        setPoPdfStatus(`تم قراءة ${parsed.items.length} صنف من الـ P.O، وتمت مطابقة ${matchedCount} صنف من المنتجات${branchSelected ? '، وتم اختيار الفرع' : ''}.`);
+
+        if (matchedCount < parsed.items.length) {
+          alert('تمت قراءة الملف، لكن بعض الباركودات غير موجودة في المنتجات. راجع الصفوف المكتوب فيها: غير موجود في المنتجات.');
+        }
+      } else {
+        setPoPdfStatus('تم قراءة رقم الـ P.O لكن لم يتم العثور على أصناف.', true);
+      }
+
+      updateSummary();
+    } catch (err) {
+      console.error('PO PDF upload error:', err);
+      alert('حدث خطأ أثناء قراءة ملف الـ P.O PDF');
+      setPoPdfStatus('حدث خطأ أثناء قراءة الملف', true);
+    } finally {
+      event.target.value = '';
+    }
+  }
+
   // ========== حفظ الفاتورة ==========
   async function saveInvoice() {
     const customerSelect = document.getElementById('customerSelect');
@@ -1951,10 +2134,7 @@ function buildInvoiceViewHtml(invoice, items, settings) {
         <div><strong>رقم الفاتورة:</strong> ${escapeHtml(invoice.invoice_id || "")}</div>
         <div><strong>السيريال:</strong> ${escapeHtml(invoice.serial || "")}</div>
         <div><strong>التاريخ:</strong> ${formatDate(invoice.date)}</div>
-        <div class="info-line">
-  <strong>رقم P.O:</strong>
-  <span dir="ltr" class="ltr-value">${escapeHtml(invoice.po_number || "")}</span>
-</div>
+        <div><strong>رقم P.O:</strong> ${escapeHtml(invoice.po_number || "")}</div>
         <div><strong>الحالة:</strong> ${escapeHtml(invoice.status || "")}</div>
       </div>
 
@@ -2195,13 +2375,12 @@ window.addEventListener('DOMContentLoaded', async function() {
   if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
   const customerSelect = document.getElementById('customerSelect');
-
-if (customerSelect) {
-  customerSelect.addEventListener('change', function() {
-    updateBranchesForCustomer(this.value);
-    repriceInvoiceItemsForSelectedCustomer();
-  });
-}
+  if (customerSelect) {
+    customerSelect.addEventListener('change', function() {
+      updateBranchesForCustomer(this.value);
+      repriceInvoiceItemsForSelectedCustomer();
+    });
+  }
 
   const searchBranch = document.getElementById('searchBranch');
   if (searchBranch) {
@@ -2224,6 +2403,11 @@ if (customerSelect) {
       e.preventDefault();
       openPoScanner();
     });
+  }
+
+  const poPdfUpload = document.getElementById('poPdfUpload');
+  if (poPdfUpload) {
+    poPdfUpload.addEventListener('change', handlePoPdfUpload);
   }
 
   const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');

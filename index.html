@@ -532,10 +532,16 @@
 </div>
 
             <div class="col-md-2">
-              <label class="form-label">رفع P.O PDF</label>
-              <input type="file" id="poPdfUpload" class="form-control" accept="application/pdf,.pdf">
-              <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
-            </div>
+  <label class="form-label">رفع P.O PDF</label>
+  <input type="file" id="poPdfUpload" class="form-control" accept="application/pdf,.pdf">
+  <div class="form-check mt-2">
+    <input class="form-check-input" type="checkbox" id="useCustomerPriceForPo">
+    <label class="form-check-label" for="useCustomerPriceForPo">
+      استخدم سعر ليستة العميل
+    </label>
+  </div>
+  <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
+</div>
 
             <div class="col-md-2">
               <label class="form-label">الخصم</label>
@@ -1323,7 +1329,7 @@ function getCustomerProductPrice(product) {
         </td>
 
         <td>
-          <input type="number" class="form-control form-control-sm price-input" value="0" onchange="updateRowCalculations(${idx})" oninput="updateRowCalculations(${idx})">
+          <input type="number" step="0.01" class="form-control form-control-sm price-input" value="0" onchange="updateRowCalculations(${idx})" oninput="updateRowCalculations(${idx})">
         </td>
 
         <td>
@@ -1802,40 +1808,64 @@ async function openPoScanner() {
     updateSummary();
   }
 
-  function addProductFromPoItem(poItem) {
-    const product = productsMap[String(poItem.barcode || '').trim()];
+ function addProductFromPoItem(poItem) {
+  const product = productsMap[String(poItem.barcode || '').trim()];
 
-    addEmptyInvoiceRow();
-    const idx = nextItemIndex - 1;
-    const row = document.getElementById(`row-${idx}`);
+  addEmptyInvoiceRow();
 
-    if (product) {
-      fillProductInRow(idx, product);
-      row.querySelector('.qty-input').value = safeNumber(poItem.quantity) || 1;
-      updateRowCalculations(idx);
-      return true;
-    }
+  const idx = nextItemIndex - 1;
+  const row = document.getElementById(`row-${idx}`);
 
-    // لو الباركود غير موجود في المنتجات، نضيفه للمراجعة بدل ما نرميه
-    if (row) {
-      row.querySelector('.barcode-input').value = poItem.barcode || '';
-      row.querySelector('.product-name-input').value = 'غير موجود في المنتجات - راجع الصنف';
-      row.querySelector('.qty-input').value = safeNumber(poItem.quantity) || 1;
-      row.querySelector('.price-input').value = safeNumber(poItem.priceFromPo) || 0;
-    }
+  const poQty = safeNumber(poItem.quantity) || 1;
+  const poPrice = safeNumber(poItem.priceFromPo);
 
-    const item = currentItems.find(i => i.idx === idx);
-    if (item) {
-      item.barcode = poItem.barcode || '';
-      item.name = '';
-      item.qty = safeNumber(poItem.quantity) || 1;
-      item.price = safeNumber(poItem.priceFromPo) || 0;
+  const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
+
+  if (product) {
+    fillProductInRow(idx, product);
+
+    row.querySelector('.qty-input').value = poQty;
+
+    /*
+      الافتراضي:
+      استخدم سعر الـ P.O
+
+      لو المستخدم علم على checkbox:
+      سيب السعر اللي fillProductInRow جابه من ليستة العميل
+    */
+    if (!useCustomerPrice && poPrice > 0) {
+      row.querySelector('.price-input').value = poPrice;
+
+      const item = currentItems.find(i => i.idx === idx);
+      if (item) {
+        item.price = poPrice;
+      }
     }
 
     updateRowCalculations(idx);
-    return false;
+    return true;
   }
 
+  // لو الباركود غير موجود في المنتجات، نضيفه للمراجعة بدل ما نرميه
+  if (row) {
+    row.querySelector('.barcode-input').value = poItem.barcode || '';
+    row.querySelector('.product-name-input').value = 'غير موجود في المنتجات - راجع الصنف';
+    row.querySelector('.qty-input').value = poQty;
+    row.querySelector('.price-input').value = poPrice;
+  }
+
+  const item = currentItems.find(i => i.idx === idx);
+
+  if (item) {
+    item.barcode = poItem.barcode || '';
+    item.name = '';
+    item.qty = poQty;
+    item.price = poPrice;
+  }
+
+  updateRowCalculations(idx);
+  return false;
+}
   async function handlePoPdfUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;

@@ -673,50 +673,71 @@
 
 </div>
 
-<div class="table-responsive invoice-items-wrapper">
+
 
 <div class="table-responsive invoice-items-wrapper">
-            <table class="table table-sm table-bordered" id="itemsTable">
-              <thead>
-                <tr>
-                  <th>الباركود</th>
-                  <th>اسم الصنف</th>
-                  <th>الكمية</th>
-                  <th>السعر</th>
-                  <th>الضريبة%</th>
-                  <th>Gross</th>
-                  <th>الضريبة</th>
-                  <th>الإجمالي</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="itemsTbody"></tbody>
-            </table>
-          </div>
+  <table class="table table-sm table-bordered" id="itemsTable">
+    <thead>
+      <tr>
+        <th>الباركود</th>
+        <th>اسم الصنف</th>
+        <th>الكمية</th>
+        <th>السعر</th>
+        <th>الضريبة%</th>
+        <th>Gross</th>
+        <th>الضريبة</th>
+        <th>الإجمالي</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="itemsTbody"></tbody>
+  </table>
+</div>
 
-          <button type="button" class="btn btn-success btn-sm mb-3" id="addItemBtn">
-            <i class="fas fa-plus"></i> إضافة صنف
-          </button>
+<button type="button" class="btn btn-success btn-sm mb-3" id="addItemBtn">
+  <i class="fas fa-plus"></i> إضافة صنف
+</button>
 
-          <div class="row summary-box">
-            <div class="col-md-3">
-              <strong>المجموع الفرعي:</strong>
-              <span id="subtotal">0.00</span>
-            </div>
-            <div class="col-md-3">
-              <strong>إجمالي الضريبة:</strong>
-              <span id="totalVat">0.00</span>
-            </div>
-            <div class="col-md-3">
-              <strong>الخصم:</strong>
-              <span id="discountDisplay">0.00</span>
-            </div>
-            <div class="col-md-3">
-              <strong>الإجمالي النهائي:</strong>
-              <span id="finalTotal">0.00</span>
-            </div>
-          </div>
+<div class="row summary-box">
+  <div class="col-md-3">
+    <strong>المجموع الفرعي:</strong>
+    <span id="subtotal">0.00</span>
+  </div>
+  <div class="col-md-3">
+    <strong>إجمالي الضريبة:</strong>
+    <span id="totalVat">0.00</span>
+  </div>
+  <div class="col-md-3">
+    <strong>الخصم:</strong>
+    <span id="discountDisplay">0.00</span>
+  </div>
+  <div class="col-md-3">
+    <strong>الإجمالي النهائي:</strong>
+    <span id="finalTotal">0.00</span>
+  </div>
+</div>
 
+<div class="row mt-3">
+  <div class="col-md-4">
+    <label class="form-label">المدفوع</label>
+    <input type="number" id="paidAmount" class="form-control" value="0">
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label">طريقة الدفع</label>
+    <select id="paymentMethod" class="form-select">
+      <option value="cash">cash</option>
+      <option value="bank">bank</option>
+      <option value="check">check</option>
+    </select>
+  </div>
+
+  <div class="col-md-4 d-flex align-items-end">
+    <button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">
+      حفظ الفاتورة
+    </button>
+  </div>
+</div>
           <div class="row mt-3">
             <div class="col-md-4">
               <label class="form-label">المدفوع</label>
@@ -733,10 +754,10 @@
             </div>
 
             <div class="col-md-4 d-flex align-items-end">
-              <div class="form-check mt-2">
-                حفظ الفاتورة
-              </button>
-            </div>
+  <button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">
+    حفظ الفاتورة
+  </button>
+</div>
           </div>
 
         </div>

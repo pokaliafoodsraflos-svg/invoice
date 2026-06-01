@@ -517,9 +517,16 @@
             </div>
 
             <div class="col-md-2">
-              <label class="form-label">التاريخ</label>
-              <input type="date" id="invoiceDate" class="form-control">
-            </div>
+  <label class="form-label">الخصم</label>
+  <input type="number" step="0.01" id="discount" class="form-control" value="0">
+
+  <div class="form-check mt-2">
+    <input class="form-check-input" type="checkbox" id="discountVatCheckbox">
+    <label class="form-check-label" for="discountVatCheckbox">
+      خصم قيمة الضريبة
+    </label>
+  </div>
+</div>
 
             <div class="col-md-2">
   <label class="form-label">رقم P.O</label>
@@ -543,12 +550,7 @@
   <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
 </div>
 
-            <div class="col-md-2">
-              <label class="form-label">الخصم</label>
-              <input type="number" id="discount" class="form-control" value="0">
-            </div>
-          </div>
-
+          
           <div class="table-responsive">
             <table class="table table-sm table-bordered" id="itemsTable">
               <thead>
@@ -889,6 +891,22 @@ let editingInvoiceId = null;
       }[m];
     });
   }
+  function applyVatDiscountIfChecked() {
+  const checkbox = document.getElementById('discountVatCheckbox');
+  const discountInput = document.getElementById('discount');
+
+  if (!checkbox || !discountInput) return;
+
+  if (!checkbox.checked) return;
+
+  let totalVat = 0;
+
+  currentItems.forEach(i => {
+    totalVat += safeNumber(i.vatAmount);
+  });
+
+  discountInput.value = totalVat.toFixed(2);
+}
 function renderBranchesTable(branches) {
   const tbody = document.getElementById('branchesTbody');
   if (!tbody) return;
@@ -1408,23 +1426,33 @@ function getCustomerProductPrice(product) {
   }
 
   // ========== إجماليات الفاتورة ==========
-  function updateSummary() {
-    let subtotal = 0;
-    let totalVat = 0;
+function updateSummary() {
+  let subtotal = 0;
+  let totalVat = 0;
 
-    currentItems.forEach(i => {
-      subtotal += safeNumber(i.gross);
-      totalVat += safeNumber(i.vatAmount);
-    });
+  currentItems.forEach(i => {
+    subtotal += safeNumber(i.gross);
+    totalVat += safeNumber(i.vatAmount);
+  });
 
-    const discount = safeNumber(document.getElementById('discount')?.value);
-    const finalTotal = subtotal + totalVat - discount;
+  const discountInput = document.getElementById('discount');
+  const discountVatCheckbox = document.getElementById('discountVatCheckbox');
 
-    document.getElementById('subtotal').innerText = subtotal.toFixed(2);
-    document.getElementById('totalVat').innerText = totalVat.toFixed(2);
-    document.getElementById('discountDisplay').innerText = discount.toFixed(2);
-    document.getElementById('finalTotal').innerText = finalTotal.toFixed(2);
+  if (discountVatCheckbox?.checked && discountInput) {
+    discountInput.value = totalVat.toFixed(2);
   }
+
+  const discount = safeNumber(discountInput?.value);
+
+  // الإجمالي النهائي بدون إضافة الضريبة
+  // ولو علمت على خصم الضريبة، الخصم هيتحط تلقائيًا بقيمة الضريبة
+  const finalTotal = subtotal - discount;
+
+  document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+  document.getElementById('totalVat').innerText = totalVat.toFixed(2);
+  document.getElementById('discountDisplay').innerText = discount.toFixed(2);
+  document.getElementById('finalTotal').innerText = finalTotal.toFixed(2);
+}
 
   // ========== وضع المنتج داخل الصف ==========
 function fillProductInRow(idx, product) {
@@ -2472,10 +2500,46 @@ if (useCustomerPriceForPo) {
     });
   }
 
-  const discountInput = document.getElementById('discount');
-  if (discountInput) {
-    discountInput.addEventListener('input', updateSummary);
-  }
+ const discountInput = document.getElementById('discount');
+
+if (discountInput) {
+  discountInput.addEventListener('input', function() {
+    const discountVatCheckbox = document.getElementById('discountVatCheckbox');
+
+    // لو المستخدم كتب خصم يدوي، شيل علامة خصم الضريبة
+    if (discountVatCheckbox?.checked) {
+      discountVatCheckbox.checked = false;
+    }
+
+    updateSummary();
+  });
+}
+
+const discountVatCheckbox = document.getElementById('discountVatCheckbox');
+
+if (discountVatCheckbox) {
+  discountVatCheckbox.addEventListener('change', function() {
+    const discountInput = document.getElementById('discount');
+
+    if (this.checked) {
+      let totalVat = 0;
+
+      currentItems.forEach(i => {
+        totalVat += safeNumber(i.vatAmount);
+      });
+
+      if (discountInput) {
+        discountInput.value = totalVat.toFixed(2);
+      }
+    } else {
+      if (discountInput) {
+        discountInput.value = 0;
+      }
+    }
+
+    updateSummary();
+  });
+}
 
   const searchCustomer = document.getElementById('searchCustomer');
   if (searchCustomer) {

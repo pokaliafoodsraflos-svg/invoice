@@ -92,7 +92,30 @@
       border-radius: 10px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     }
+/* إظهار دروب داون المنتجات فوق الصفوف وزر إضافة صنف */
+#newInvoiceTab .table-responsive {
+  overflow: visible !important;
+}
 
+#itemsTable,
+#itemsTable tbody,
+#itemsTable tr,
+#itemsTable td {
+  overflow: visible !important;
+}
+
+#itemsTable td {
+  position: relative;
+}
+
+.product-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: 0 !important;
+  z-index: 999999 !important;
+  background: white;
+}
     .product-dropdown div {
       padding: 8px 12px;
       cursor: pointer;

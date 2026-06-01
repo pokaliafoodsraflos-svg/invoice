@@ -1493,12 +1493,21 @@ function updateSummary() {
   const discountInput = document.getElementById('discount');
   const discountVatCheckbox = document.getElementById('discountVatCheckbox');
 
+  // لو checkbox خصم الضريبة متعلم، حط قيمة الضريبة في خانة الخصم
   if (discountVatCheckbox?.checked && discountInput) {
     discountInput.value = totalVat.toFixed(2);
   }
 
   const discount = safeNumber(discountInput?.value);
 
+  // الإجمالي النهائي = الفرعي + الضريبة - الخصم
+  const finalTotal = subtotal + totalVat - discount;
+
+  document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+  document.getElementById('totalVat').innerText = totalVat.toFixed(2);
+  document.getElementById('discountDisplay').innerText = discount.toFixed(2);
+  document.getElementById('finalTotal').innerText = finalTotal.toFixed(2);
+}
   // الإجمالي النهائي بدون إضافة الضريبة
   // ولو علمت على خصم الضريبة، الخصم هيتحط تلقائيًا بقيمة الضريبة
   const finalTotal = subtotal - discount;

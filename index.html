@@ -93,21 +93,19 @@
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     }
 /* إظهار دروب داون المنتجات فوق الصفوف وزر إضافة صنف */
-#newInvoiceTab .table-responsive {
-  overflow: visible !important;
+/* جدول الأصناف يفضل Scroll على الموبايل ومايكسرش الصفحة */
+.invoice-items-wrapper {
+  position: relative;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
 }
 
-#itemsTable,
-#itemsTable tbody,
-#itemsTable tr,
-#itemsTable td {
-  overflow: visible !important;
-}
-
+/* نخلي الخلية اللي فيها اسم الصنف هي مرجع الدروب داون */
 #itemsTable td {
   position: relative;
 }
 
+/* الدروب داون يظهر فوق العناصر */
 .product-dropdown {
   position: absolute !important;
   top: 100% !important;
@@ -116,7 +114,31 @@
   z-index: 999999 !important;
   background: white;
 }
-    .product-dropdown div {
+
+/* على الموبايل: رجّع الجدول Scroll وما تخليش overflow visible يبوظ العرض */
+@media (max-width: 768px) {
+  #newInvoiceTab .card-body {
+    overflow-x: hidden;
+  }
+
+  .invoice-items-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #itemsTable {
+    min-width: 760px;
+    width: 760px;
+  }
+
+  .product-dropdown {
+    min-width: 220px;
+    max-height: 180px;
+  }
+}    .product-dropdown div {
       padding: 8px 12px;
       cursor: pointer;
     }
@@ -573,8 +595,9 @@
   <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
 </div>
 
-          
-          <div class="table-responsive">
+</div>
+
+<div class="table-responsive invoice-items-wrapper">
             <table class="table table-sm table-bordered" id="itemsTable">
               <thead>
                 <tr>

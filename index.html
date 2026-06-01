@@ -1510,14 +1510,7 @@ function updateSummary() {
 }
   // الإجمالي النهائي بدون إضافة الضريبة
   // ولو علمت على خصم الضريبة، الخصم هيتحط تلقائيًا بقيمة الضريبة
-  const finalTotal = subtotal - discount;
-
-  document.getElementById('subtotal').innerText = subtotal.toFixed(2);
-  document.getElementById('totalVat').innerText = totalVat.toFixed(2);
-  document.getElementById('discountDisplay').innerText = discount.toFixed(2);
-  document.getElementById('finalTotal').innerText = finalTotal.toFixed(2);
-}
-
+  
   // ========== وضع المنتج داخل الصف ==========
 function fillProductInRow(idx, product) {
   const row = document.getElementById(`row-${idx}`);

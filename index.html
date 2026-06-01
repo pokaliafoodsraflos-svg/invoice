@@ -92,30 +92,37 @@
       border-radius: 10px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
     }
-/* إظهار دروب داون المنتجات فوق الصفوف وزر إضافة صنف */
-/* جدول الأصناف يفضل Scroll على الموبايل ومايكسرش الصفحة */
+/* جدول الأصناف يفضل جوه الكارت */
 .invoice-items-wrapper {
   position: relative;
   overflow-x: auto !important;
   overflow-y: visible !important;
+  padding-bottom: 90px;
 }
 
-/* نخلي الخلية اللي فيها اسم الصنف هي مرجع الدروب داون */
+/* خلية اسم الصنف تكون مرجع للدروب داون */
 #itemsTable td {
   position: relative;
 }
 
-/* الدروب داون يظهر فوق العناصر */
+/* دروب داون المنتجات يظهر فوق الصفوف والزر */
 .product-dropdown {
   position: absolute !important;
   top: 100% !important;
   right: 0 !important;
   left: 0 !important;
   z-index: 999999 !important;
-  background: white;
+  background: white !important;
+  max-height: 220px;
+  overflow-y: auto;
 }
 
-/* على الموبايل: رجّع الجدول Scroll وما تخليش overflow visible يبوظ العرض */
+/* نزود مسافة قبل زر إضافة صنف */
+#addItemBtn {
+  margin-top: 10px;
+}
+
+/* نسخة الموبايل */
 @media (max-width: 768px) {
   #newInvoiceTab .card-body {
     overflow-x: hidden;
@@ -127,6 +134,7 @@
     overflow-x: auto !important;
     overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 110px;
   }
 
   #itemsTable {
@@ -137,8 +145,9 @@
   .product-dropdown {
     min-width: 220px;
     max-height: 180px;
+    z-index: 999999 !important;
   }
-}    .product-dropdown div {
+}  .product-dropdown div {
       padding: 8px 12px;
       cursor: pointer;
     }
@@ -517,7 +526,7 @@
       <div class="card">
         <div class="card-header">📋 جميع الفواتير</div>
         <div class="card-body">
-          <div class="table-responsive">
+          <div class="table-responsive invoice-items-wrapper">
             <table class="table table-bordered table-hover" id="invoicesTable">
               <thead>
                 <tr>

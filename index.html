@@ -660,15 +660,20 @@
 <div class="col-md-2">
   <label class="form-label">رفع P.O PDF</label>
   <input type="file" id="poPdfUpload" class="form-control" accept="application/pdf,.pdf">
-  <div class=<button type="button" class="btn btn-primary"">
+
+  <div class="form-check mt-2">
     <input class="form-check-input" type="checkbox" id="useCustomerPriceForPo">
     <label class="form-check-label" for="useCustomerPriceForPo">
       استخدم سعر ليستة العميل
     </label>
   </div>
+
   <small id="poPdfStatus" class="text-muted d-block mt-1"></small>
 </div>
 
+</div>
+
+<div class="table-responsive invoice-items-wrapper">
 
 <div class="table-responsive invoice-items-wrapper">
             <table class="table table-sm table-bordered" id="itemsTable">
@@ -728,7 +733,7 @@
             </div>
 
             <div class="col-md-4 d-flex align-items-end">
-              <button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">
+              <div class="form-check mt-2">
                 حفظ الفاتورة
               </button>
             </div>

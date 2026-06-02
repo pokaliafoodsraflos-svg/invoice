@@ -2362,27 +2362,25 @@ function buildInvoiceViewHtml(invoice, items, settings) {
      
     </div>
 
-    <div class="invoice-title">فاتورة مبيعات</div>
+  <div class="invoice-title">Sales Invoice</div>
 
-    <div class="invoice-info-grid">
-      <div class="invoice-info-box">
-        <h6>بيانات الفاتورة</h6>
-        <div><strong>رقم الفاتورة:</strong> ${escapeHtml(invoice.invoice_id || "")}</div>
-        <div><strong>السيريال:</strong> ${escapeHtml(invoice.serial || "")}</div>
-        <div><strong>التاريخ:</strong> ${formatDate(invoice.date)}</div>
-        <div><strong>رقم P.O:</strong> ${escapeHtml(invoice.po_number || "")}</div>
-        <div><strong>الحالة:</strong> ${escapeHtml(invoice.status || "")}</div>
-      </div>
+<div class="invoice-info-grid">
+  <div class="invoice-info-box" style="direction:ltr; text-align:left;">
+    <h6>Invoice Details</h6>
+    <div><strong>Invoice No.:</strong> ${escapeHtml(invoice.invoice_id || "")}</div>
+    <div><strong>Tax Invoice No.:</strong> ${escapeHtml(invoice.tax_invoice_number || "")}</div>
+    <div><strong>Date:</strong> ${formatDate(invoice.date)}</div>
+    <div><strong>P.O No.:</strong> ${escapeHtml(invoice.po_number || "")}</div>
+    <div><strong>Status:</strong> ${escapeHtml(invoice.status || "")}</div>
+  </div>
 
-      <div class="invoice-info-box">
-        <h6>بيانات العميل</h6>
-        <div><strong>اسم العميل:</strong> ${escapeHtml(invoice.customer_name || "")}</div>
-        <div><strong>كود العميل:</strong> ${escapeHtml(invoice.customer_id || "")}</div>
-        <div><strong>الفرع:</strong> ${escapeHtml(invoice.branch_name || "")}</div>
-        <div><strong>رابط الموقع:</strong> ${escapeHtml(invoice.branch_location || "")}</div>
-      </div>
-    </div>
-
+  <div class="invoice-info-box" style="direction:ltr; text-align:left;">
+    <h6>Customer Details</h6>
+    <div><strong>Customer Name:</strong> ${escapeHtml(invoice.customer_name || "")}</div>
+    <div><strong>Branch:</strong> ${escapeHtml(invoice.branch_name || "")}</div>
+    <div><strong>Vend No.:</strong> ${escapeHtml(invoice.vendor_no || "")}</div>
+  </div>
+</div>
     <table>
       <thead>
         <tr>

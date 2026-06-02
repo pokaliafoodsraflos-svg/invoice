@@ -595,7 +595,7 @@
   <th>العميل</th>
   <th>الفرع</th>
   <th>اللوكيشن</th>
-  <th>الإجمالي</th>
+  <th>Total</th>
   <th>المدفوع</th>
   <th>المتبقي</th>
   <th>الحالة</th>
@@ -616,36 +616,41 @@
         <div class="card-body">
 
           <div class="row g-3 mb-3">
+            <div class="col-md-2">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" id="invoiceDate" class="form-control">
+            </div>
+
             <div class="col-md-3">
-              <label class="form-label">العميل</label>
+              <label class="form-label">Customer</label>
               <select id="customerSelect" class="form-select">
-                <option value="">جاري تحميل العملاء...</option>
+                <option value="">Loading customers...</option>
               </select>
             </div>
 
             <div class="col-md-3">
-              <label class="form-label">الفرع</label>
+              <label class="form-label">Branch</label>
               <select id="branchSelect" class="form-select">
-                <option value="">-- اختر الفرع --</option>
+                <option value="">-- Select Branch --</option>
               </select>
             </div>
 
             <div class="col-md-2">
-  <label class="form-label">الخصم</label>
+  <label class="form-label">Discount</label>
   <input type="number" step="0.01" id="discount" class="form-control" value="0">
 
   <div class="form-check mt-2">
     <input class="form-check-input" type="checkbox" id="discountVatCheckbox">
     <label class="form-check-label" for="discountVatCheckbox">
-      خصم قيمة الضريبة
+      Deduct VAT Value
     </label>
   </div>
 </div>
 
          <div class="col-md-2">
-  <label class="form-label">رقم P.O</label>
+  <label class="form-label">P.O No.</label>
   <div class="input-group">
-    <input type="text" id="poNumber" class="form-control" placeholder="اكتب أو اعمل سكان للـ PO">
+    <input type="text" id="poNumber" class="form-control" placeholder="Type or scan P.O No.">
     <button type="button" class="btn btn-primary" id="scanPoBtn" style="cursor:pointer; z-index:10;">
       <i class="fas fa-camera"></i>
     </button>
@@ -658,13 +663,13 @@
 </div>
 
 <div class="col-md-2">
-  <label class="form-label">رفع P.O PDF</label>
+  <label class="form-label">Upload P.O PDF</label>
   <input type="file" id="poPdfUpload" class="form-control" accept="application/pdf,.pdf">
 
   <div class="form-check mt-2">
     <input class="form-check-input" type="checkbox" id="useCustomerPriceForPo">
     <label class="form-check-label" for="useCustomerPriceForPo">
-      استخدم سعر ليستة العميل
+      Use Customer Price List
     </label>
   </div>
 
@@ -679,14 +684,14 @@
   <table class="table table-sm table-bordered" id="itemsTable">
     <thead>
       <tr>
-        <th>الباركود</th>
-        <th>اسم الصنف</th>
-        <th>الكمية</th>
-        <th>السعر</th>
-        <th>الضريبة%</th>
+        <th>Barcode</th>
+        <th>Item Name</th>
+        <th>Qty</th>
+        <th>Unit Price</th>
+        <th>VAT %</th>
         <th>Gross</th>
-        <th>الضريبة</th>
-        <th>الإجمالي</th>
+        <th>VAT Amount</th>
+        <th>Total</th>
         <th></th>
       </tr>
     </thead>
@@ -695,36 +700,36 @@
 </div>
 
 <button type="button" class="btn btn-success btn-sm mb-3" id="addItemBtn">
-  <i class="fas fa-plus"></i> إضافة صنف
+  <i class="fas fa-plus"></i> Add Item
 </button>
 
 <div class="row summary-box">
   <div class="col-md-3">
-    <strong>المجموع الفرعي:</strong>
+    <strong>Subtotal:</strong>
     <span id="subtotal">0.00</span>
   </div>
   <div class="col-md-3">
-    <strong>إجمالي الضريبة:</strong>
+    <strong>Total VAT:</strong>
     <span id="totalVat">0.00</span>
   </div>
   <div class="col-md-3">
-    <strong>الخصم:</strong>
+    <strong>Discount:</strong>
     <span id="discountDisplay">0.00</span>
   </div>
   <div class="col-md-3">
-    <strong>الإجمالي النهائي:</strong>
+    <strong>Grand Total:</strong>
     <span id="finalTotal">0.00</span>
   </div>
 </div>
 
 <div class="row mt-3">
   <div class="col-md-4">
-    <label class="form-label">المدفوع</label>
+    <label class="form-label">Paid Amount</label>
     <input type="number" id="paidAmount" class="form-control" value="0">
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">طريقة الدفع</label>
+    <label class="form-label">Payment Method</label>
     <select id="paymentMethod" class="form-select">
       <option value="cash">cash</option>
       <option value="bank">bank</option>
@@ -734,18 +739,18 @@
 
   <div class="col-md-4 d-flex align-items-end">
     <button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">
-      حفظ الفاتورة
+      Save Invoice
     </button>
   </div>
 </div>
           <div class="row mt-3">
             <div class="col-md-4">
-              <label class="form-label">المدفوع</label>
+              <label class="form-label">Paid Amount</label>
               <input type="number" id="paidAmount" class="form-control" value="0">
             </div>
 
             <div class="col-md-4">
-              <label class="form-label">طريقة الدفع</label>
+              <label class="form-label">Payment Method</label>
               <select id="paymentMethod" class="form-select">
                 <option value="cash">cash</option>
                 <option value="bank">bank</option>
@@ -755,7 +760,7 @@
 
             <div class="col-md-4 d-flex align-items-end">
   <button type="button" class="btn btn-primary w-100" id="saveInvoiceBtn">
-    حفظ الفاتورة
+    Save Invoice
   </button>
 </div>
           </div>
@@ -776,10 +781,11 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>الاسم</th>
-                  <th>الرقم الضريبي</th>
-                  <th>الهاتف</th>
-                  <th>العنوان</th>
+                  <th>Name</th>
+                  <th>Tax No.</th>
+                  <th>Vendor No.</th>
+                  <th>Phone</th>
+                  <th>Address</th>
                 </tr>
               </thead>
               <tbody id="customersTbody"></tbody>
@@ -831,9 +837,9 @@
                 <tr>
                   <th>ID</th>
                   <th>الاسم</th>
-                  <th>الباركود</th>
-                  <th>السعر</th>
-                  <th>الضريبة%</th>
+                  <th>Barcode</th>
+                  <th>Unit Price</th>
+                  <th>VAT %</th>
                   <th>المخزون</th>
                 </tr>
               </thead>
@@ -860,7 +866,7 @@
                   <th>التاريخ</th>
                   <th>المنتج</th>
                   <th>النوع</th>
-                  <th>الكمية</th>
+                  <th>Qty</th>
                   <th>المرجع</th>
                 </tr>
               </thead>
@@ -945,9 +951,10 @@
       </div>
 
       <div class="modal-body">
-        <input type="text" id="newCustomerName" class="form-control mb-2" placeholder="الاسم">
-        <input type="text" id="newCustomerTax" class="form-control mb-2" placeholder="الرقم الضريبي">
-        <input type="text" id="newCustomerPhone" class="form-control mb-2" placeholder="الهاتف">
+        <input type="text" id="newCustomerName" class="form-control mb-2" placeholder="Customer Name">
+        <input type="text" id="newCustomerTax" class="form-control mb-2" placeholder="Tax No.">
+        <input type="text" id="newCustomerVendorNo" class="form-control mb-2" placeholder="Vendor No.">
+        <input type="text" id="newCustomerPhone" class="form-control mb-2" placeholder="Phone">
       </div>
 
       <div class="modal-footer">
@@ -1049,6 +1056,22 @@ let editingInvoiceId = null;
         "'": '&#039;'
       }[m];
     });
+  }
+
+  function firstValue(obj, keys, fallback = "") {
+    if (!obj) return fallback;
+    for (const key of keys) {
+      if (obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== "") {
+        return obj[key];
+      }
+    }
+    return fallback;
+  }
+
+  function getVendorNo(customer) {
+    return firstValue(customer, [
+      'vendor_no', 'vendor_number', 'vendorNo', 'vend_no', 'Vend No.', 'Vendor No.', 'رقم المورد'
+    ], "");
   }
   function applyVatDiscountIfChecked() {
   const checkbox = document.getElementById('discountVatCheckbox');
@@ -1188,7 +1211,7 @@ function renderBranchesTable(branches) {
         return;
       }
 
-      select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
+      select.innerHTML = '<option value="">-- Select Customer --</option>';
 
       if (data.success && Array.isArray(data.customers)) {
         allCustomers = data.customers;
@@ -1242,7 +1265,7 @@ function renderBranchesTable(branches) {
     const branchSelect = document.getElementById('branchSelect');
     if (!branchSelect) return;
 
-    branchSelect.innerHTML = '<option value="">-- اختر الفرع --</option>';
+    branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
 
     if (!customerId) return;
 
@@ -1382,6 +1405,7 @@ async function loadPriceLists() {
             <td>${escapeHtml(c.customer_id || c.id || "")}</td>
             <td>${escapeHtml(c.customer_name || c.name || "")}</td>
             <td>${escapeHtml(c.tax_id || "")}</td>
+            <td>${escapeHtml(getVendorNo(c))}</td>
             <td>${escapeHtml(c.phone || "")}</td>
             <td>${escapeHtml(c.address || "")}</td>
           </tr>
@@ -1779,7 +1803,7 @@ function fillProductInRow(idx, product) {
 
     currentScanRow = null;
   }
-// ========== سكان باركود رقم P.O ==========
+// ========== سكان باركود P.O No. ==========
 async function openPoScanner() {
   let overlay = document.getElementById('scannerOverlay');
 
@@ -2115,7 +2139,7 @@ if (item) {
     }
   }
 
-  // ========== حفظ الفاتورة ==========
+  // ========== Save Invoice ==========
   async function saveInvoice() {
     const customerSelect = document.getElementById('customerSelect');
     const customerId = customerSelect.value;
@@ -2124,7 +2148,7 @@ const selectedCustomer = allCustomers.find(c =>
   String(c.customer_id || c.id || '').trim() === String(customerId).trim()
 );
 
-const vendorNo = selectedCustomer?.vendor_no || selectedCustomer?.vendor_number || "";
+const vendorNo = getVendorNo(selectedCustomer);
     const branchSelect = document.getElementById('branchSelect');
     const branchName = branchSelect?.value || "";
     const branchLocation = branchSelect?.options[branchSelect.selectedIndex]?.dataset.location || "";
@@ -2154,7 +2178,7 @@ const vendorNo = selectedCustomer?.vendor_no || selectedCustomer?.vendor_number 
      vendor_no: vendorNo,
   branch_name: branchName,
   branch_location: branchLocation,
-  date: document.getElementById('invoiceDate').value,
+  date: document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0],
   po_number: document.getElementById('poNumber').value,
      tax_invoice_number: document.getElementById('taxInvoiceNumber')?.value || "",
   discount: safeNumber(document.getElementById('discount').value),
@@ -2172,7 +2196,7 @@ const vendorNo = selectedCustomer?.vendor_no || selectedCustomer?.vendor_number 
       const res = await apiCall('saveInvoice', 'POST', invoiceData);
 
       if (res.success) {
-  alert(editMode ? "تم تحديث الفاتورة بنجاح" : `تم حفظ الفاتورة رقم ${res.serial || res.invoiceId}`);
+  alert(editMode ? "تم تحديث الفاتورة بنجاح" : `تم Save Invoice رقم ${res.serial || res.invoiceId}`);
 
   editMode = false;
   editingInvoiceId = null;
@@ -2180,11 +2204,11 @@ const vendorNo = selectedCustomer?.vendor_no || selectedCustomer?.vendor_number 
   location.reload();
 }
        else {
-        alert('خطأ: ' + (res.error || 'فشل حفظ الفاتورة'));
+        alert('خطأ: ' + (res.error || 'فشل Save Invoice'));
       }
     } catch (e) {
       console.error(e);
-      alert('حدث خطأ أثناء حفظ الفاتورة');
+      alert('حدث خطأ أثناء Save Invoice');
     }
   }
 
@@ -2202,6 +2226,7 @@ const vendorNo = selectedCustomer?.vendor_no || selectedCustomer?.vendor_number 
         action: 'addCustomer',
         name: name,
         tax_id: document.getElementById('newCustomerTax').value,
+        vendor_no: document.getElementById('newCustomerVendorNo')?.value || "",
         phone: document.getElementById('newCustomerPhone').value
       });
 
@@ -2377,22 +2402,23 @@ function buildInvoiceViewHtml(invoice, items, settings) {
   <div class="invoice-info-box" style="direction:ltr; text-align:left;">
     <h6>Customer Details</h6>
     <div><strong>Customer Name:</strong> ${escapeHtml(invoice.customer_name || "")}</div>
+    <div><strong>Customer ID:</strong> ${escapeHtml(invoice.customer_id || "")}</div>
     <div><strong>Branch:</strong> ${escapeHtml(invoice.branch_name || "")}</div>
-    <div><strong>Vend No.:</strong> ${escapeHtml(invoice.vendor_no || "")}</div>
+    <div><strong>Vendor No.:</strong> ${escapeHtml(invoice.vendor_no || invoice.vendor_number || "")}</div>
   </div>
 </div>
     <table>
       <thead>
         <tr>
           <th>#</th>
-          <th>الباركود</th>
-          <th>الصنف</th>
-          <th>الكمية</th>
-          <th>السعر</th>
+          <th>Barcode</th>
+          <th>Item Description</th>
+          <th>Qty</th>
+          <th>Unit Price</th>
           <th>Gross</th>
-          <th>الضريبة%</th>
-          <th>قيمة الضريبة</th>
-          <th>الإجمالي</th>
+          <th>VAT %</th>
+          <th>VAT Amount</th>
+          <th>Total</th>
         </tr>
       </thead>
       <tbody>
@@ -2402,32 +2428,32 @@ function buildInvoiceViewHtml(invoice, items, settings) {
 
     <div class="invoice-totals">
       <div class="invoice-totals-row">
-        <span>المجموع الفرعي</span>
+        <span>Subtotal</span>
         <span>${safeNumber(invoice.subtotal).toFixed(2)}</span>
       </div>
 
       <div class="invoice-totals-row">
-        <span>إجمالي الضريبة</span>
+        <span>Total VAT</span>
         <span>${safeNumber(invoice.vat_total).toFixed(2)}</span>
       </div>
 
       <div class="invoice-totals-row">
-        <span>الخصم</span>
+        <span>Discount</span>
         <span>${safeNumber(invoice.discount).toFixed(2)}</span>
       </div>
 
       <div class="invoice-totals-row">
-        <span>الإجمالي النهائي</span>
+        <span>Grand Total</span>
         <span>${safeNumber(invoice.total).toFixed(2)}</span>
       </div>
 
       <div class="invoice-totals-row">
-        <span>المدفوع</span>
+        <span>Paid Amount</span>
         <span>${safeNumber(invoice.paid_amount).toFixed(2)}</span>
       </div>
 
       <div class="invoice-totals-row">
-        <span>المتبقي</span>
+        <span>Balance Due</span>
         <span>${safeNumber(invoice.remaining_amount).toFixed(2)}</span>
       </div>
     </div>
@@ -2539,6 +2565,7 @@ function repriceInvoiceItemsForSelectedCustomer() {
     }
 
     document.getElementById('poNumber').value = invoice.po_number || "";
+    document.getElementById('taxInvoiceNumber').value = invoice.tax_invoice_number || "";
     document.getElementById('discount').value = safeNumber(invoice.discount);
     document.getElementById('paidAmount').value = safeNumber(invoice.paid_amount);
 

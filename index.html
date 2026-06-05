@@ -258,8 +258,9 @@
 }
 
 .invoice-logo-side .invoice-logo {
-  max-width: 130px;
-  max-height: 85px;
+  width: 320px;
+  max-width: 320px;
+  max-height: 220px;
   object-fit: contain;
 }
 .invoice-company h2 {
@@ -487,8 +488,15 @@
 }
 
 #printOnlyArea .invoice-logo-side {
-  width: 140px !important;
+  width: 360px !important;
   text-align: right !important;
+}
+
+#printOnlyArea .invoice-logo-side .invoice-logo {
+  width: 320px !important;
+  max-width: 320px !important;
+  max-height: 220px !important;
+  object-fit: contain !important;
 }
   #printOnlyArea td {
     padding: 6px !important;

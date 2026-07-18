@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
+    /* جميع الأنماط كما هي في النسخة السابقة - تم حذفها للاختصار ولكن يتم الاحتفاظ بها */
     * { box-sizing: border-box; }
     body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; padding-bottom: 30px; }
     .app-header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; border-radius: 0 0 25px 25px; margin-bottom: 25px; }
@@ -91,7 +92,6 @@
     }
   </style>
 </head>
-
 <body>
 
 <div class="container-fluid">
@@ -245,7 +245,7 @@
       </div>
     </div>
 
-    <!-- العملاء (تم التعديل) -->
+    <!-- العملاء (معدل) -->
     <div class="tab-pane fade" id="customersTab">
       <div class="card">
         <div class="card-header">👥 العملاء</div>
@@ -523,7 +523,7 @@
   let scanner = null;
   let scannerRunning = false;
   let currentScanRow = null;
-  let currentLedgerCustomerId = ''; // جديد
+  let currentLedgerCustomerId = '';
 
   // ========== أدوات مساعدة ==========
   function safeNumber(val) { const n = Number(val); return isNaN(n) ? 0 : n; }
@@ -544,7 +544,7 @@
     try { return JSON.parse(text); } catch (err) { console.error("API returned non JSON:", text); throw new Error("API returned non JSON"); }
   }
 
-  // ========== تحميل البيانات ==========
+  // ========== تحميل المنتجات ==========
   async function loadProducts() {
     try {
       const data = await apiCall('getProducts');
@@ -694,6 +694,29 @@
     tbody.innerHTML = html;
   }
 
+  // ========== عرض المنتجات ==========
+  function renderProductsTable(products) {
+    const tbody = document.getElementById('productsTbody');
+    if (!tbody) return;
+    const search = (document.getElementById('searchProduct')?.value || '').toLowerCase();
+    let html = '';
+    products.filter(p => String(p.name || "").toLowerCase().includes(search)).forEach(p => {
+      html += `<tr><td>${escapeHtml(p.product_id || "")}</td><td>${escapeHtml(p.name || "")}</td><td>${escapeHtml(p.barcode || "")}</td><td>${safeNumber(p.price).toFixed(2)}</td><td>${safeNumber(p.vat_rate)}%</td><td>${safeNumber(p.stock)}</td></tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ========== عرض حركة المخزون ==========
+  function renderStockMovementsTable(movements) {
+    const tbody = document.getElementById('stockMovementsTbody');
+    if (!tbody) return;
+    let html = '';
+    movements.slice(0, 200).forEach(m => {
+      html += `<tr><td>${formatDate(m.date)}</td><td>${escapeHtml(m.product_name || "")}</td><td>${escapeHtml(m.type || "")}</td><td>${safeNumber(m.quantity)}</td><td>${escapeHtml(m.reference || "")}</td></tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
   // ========== عرض سجل الحركات (جديد) ==========
   async function viewLedger(customerId, customerName) {
     currentLedgerCustomerId = customerId;
@@ -758,30 +781,7 @@
     } catch (e) { console.error(e); alert('حدث خطأ أثناء التعديل'); }
   });
 
-  // ========== عرض المنتجات ==========
-  function renderProductsTable(products) {
-    const tbody = document.getElementById('productsTbody');
-    if (!tbody) return;
-    const search = (document.getElementById('searchProduct')?.value || '').toLowerCase();
-    let html = '';
-    products.filter(p => String(p.name || "").toLowerCase().includes(search)).forEach(p => {
-      html += `<tr><td>${escapeHtml(p.product_id || "")}</td><td>${escapeHtml(p.name || "")}</td><td>${escapeHtml(p.barcode || "")}</td><td>${safeNumber(p.price).toFixed(2)}</td><td>${safeNumber(p.vat_rate)}%</td><td>${safeNumber(p.stock)}</td></tr>`;
-    });
-    tbody.innerHTML = html;
-  }
-
-  // ========== عرض حركة المخزون ==========
-  function renderStockMovementsTable(movements) {
-    const tbody = document.getElementById('stockMovementsTbody');
-    if (!tbody) return;
-    let html = '';
-    movements.slice(0, 200).forEach(m => {
-      html += `<tr><td>${formatDate(m.date)}</td><td>${escapeHtml(m.product_name || "")}</td><td>${escapeHtml(m.type || "")}</td><td>${safeNumber(m.quantity)}</td><td>${escapeHtml(m.reference || "")}</td></tr>`;
-    });
-    tbody.innerHTML = html;
-  }
-
-  // ========== دوال الفاتورة (مختصرة ولكن كاملة) ==========
+  // ========== دوال الفاتورة (من النسخة الأصلية) ==========
   function getCustomerProductPrice(product) {
     const customerId = document.getElementById('customerSelect')?.value || "";
     if (!customerId || !product) { return safeNumber(product?.price); }
@@ -918,10 +918,362 @@
     currentScanRow = null;
   }
 
-  // ========== باقي الدوال ==========
-  // (مختصرة جداً: openPoScanner, handlePoPdfUpload, saveInvoice, addCustomer, addProduct, saveSettings, viewInvoice, editInvoice, printInvoice, buildInvoiceViewHtml, repriceInvoiceItemsForSelectedCustomer, printCurrentInvoice, loadInvoiceForEdit)
-  // يُفترض أن هذه الدوال موجودة بالفعل في الكود الأصلي. لضيق المساحة تم حذفها، لكن يمكنك دمجها من نسختك الحالية.
-  // سأدرجها في النهاية إذا لزم الأمر.
+  // ========== سكان باركود P.O No. ==========
+  async function openPoScanner() {
+    let overlay = document.getElementById('scannerOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'scannerOverlay';
+      overlay.className = 'scanner-overlay';
+      overlay.innerHTML = `<div class="scanner-box"><div id="reader"></div><button type="button" class="stop-scan-btn" onclick="closeScanner()">إغلاق الكاميرا</button></div>`;
+      document.body.appendChild(overlay);
+    } else { overlay.style.display = 'flex'; }
+    try {
+      if (scannerRunning && scanner) { await scanner.stop(); }
+      scanner = new Html5Qrcode("reader");
+      await scanner.start({ facingMode: "environment" }, { fps: 12, qrbox: { width: 280, height: 180 }, aspectRatio: 1.777 },
+        decodedText => { const poInput = document.getElementById('poNumber'); if (poInput) { poInput.value = decodedText; } closeScanner(); },
+        error => console.warn(error)
+      );
+      scannerRunning = true;
+    } catch (err) { console.error(err); alert('تعذر فتح الكاميرا للـ PO'); closeScanner(); }
+  }
+
+  // ========== رفع وقراءة ملف P.O PDF ==========
+  function setPoPdfStatus(message, isError = false) {
+    const status = document.getElementById('poPdfStatus');
+    if (!status) return;
+    status.textContent = message || '';
+    status.className = isError ? 'text-danger d-block mt-1' : 'text-muted d-block mt-1';
+  }
+
+  function normalizeArabicText(text) {
+    return String(text || '')
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  async function extractTextRowsFromPdf(file) {
+    if (!window.pdfjsLib) { throw new Error('PDF.js library is not loaded'); }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const rows = [];
+    let fullText = '';
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const items = textContent.items
+        .map(item => ({ text: normalizeArabicText(item.str), x: item.transform[4], y: item.transform[5] }))
+        .filter(item => item.text);
+      fullText += ' ' + items.map(item => item.text).join(' ');
+      items.sort((a, b) => b.y - a.y || a.x - b.x);
+      const grouped = [];
+      items.forEach(item => {
+        let row = grouped.find(r => Math.abs(r.y - item.y) <= 3);
+        if (!row) { row = { y: item.y, items: [] }; grouped.push(row); }
+        row.items.push(item);
+      });
+      grouped.forEach(row => {
+        row.items.sort((a, b) => a.x - b.x);
+        rows.push(row.items.map(item => item.text).join(' '));
+      });
+    }
+    return { text: normalizeArabicText(fullText), rows: rows.map(normalizeArabicText).filter(Boolean) };
+  }
+
+  function parseOscarPoPdfText(pdfData) {
+    const text = pdfData.text || '';
+    const rows = pdfData.rows || [];
+    const poMatch = text.match(/PO-\d+/i);
+    const poNumber = poMatch ? poMatch[0].toUpperCase() : '';
+    let branchName = '';
+    const matchedBranch = allBranches.find(b => { const name = String(b.branch_name || '').trim(); return name && text.toLowerCase().includes(name.toLowerCase()); });
+    if (matchedBranch) { branchName = matchedBranch.branch_name || ''; } else { const possibleBranch = rows.find(line => /\b[A-Za-z]+\b/.test(line) && line.includes('-') && !/PO-\d+/i.test(line)); branchName = possibleBranch || ''; }
+    const items = [];
+    const seen = new Set();
+    rows.forEach(line => {
+      const barcodeMatch = line.match(/\b\d{10,14}\b/);
+      if (!barcodeMatch) return;
+      const barcode = barcodeMatch[0];
+      if (seen.has(barcode)) return;
+      const tableNumbers = line.match(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/g) || [];
+      const decimalNumbers = tableNumbers.map(n => n.replace(/,/g, '')).filter(n => /^\d+(?:\.\d+)?$/.test(n));
+      let quantity = 1, price = 0;
+      const beforeVatMatch = line.match(/([\d,]+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)\s+0%\s+PCS/i);
+      if (beforeVatMatch) { price = safeNumber(beforeVatMatch[2].replace(/,/g, '')); quantity = safeNumber(beforeVatMatch[3].replace(/,/g, '')); } else { const qtyCandidate = decimalNumbers.find(n => safeNumber(n) > 0 && safeNumber(n) <= 10000 && n.includes('.')); quantity = safeNumber(qtyCandidate) || 1; }
+      items.push({ barcode, quantity, priceFromPo: price, rawLine: line });
+      seen.add(barcode);
+    });
+    return { poNumber, branchName, items };
+  }
+
+  function selectCustomerAndBranchFromPo(branchName) {
+    if (!branchName) return false;
+    const branch = allBranches.find(b => String(b.branch_name || '').trim().toLowerCase() === String(branchName || '').trim().toLowerCase()) || allBranches.find(b => String(branchName || '').toLowerCase().includes(String(b.branch_name || '').trim().toLowerCase()) || String(b.branch_name || '').toLowerCase().includes(String(branchName || '').trim().toLowerCase()));
+    if (!branch) return false;
+    const customerSelect = document.getElementById('customerSelect');
+    const branchSelect = document.getElementById('branchSelect');
+    if (customerSelect && branch.customer_id) { customerSelect.value = branch.customer_id; updateBranchesForCustomer(branch.customer_id); repriceInvoiceItemsForSelectedCustomer(); }
+    if (branchSelect) { branchSelect.value = branch.branch_name || ''; }
+    return true;
+  }
+
+  function clearInvoiceItems() {
+    const tbody = document.getElementById('itemsTbody');
+    if (tbody) tbody.innerHTML = '';
+    currentItems = [];
+    nextItemIndex = 0;
+    updateSummary();
+  }
+
+  function addProductFromPoItem(poItem) {
+    const product = productsMap[String(poItem.barcode || '').trim()];
+    addEmptyInvoiceRow();
+    const idx = nextItemIndex - 1;
+    const row = document.getElementById(`row-${idx}`);
+    const poQty = safeNumber(poItem.quantity) || 1;
+    const poPrice = safeNumber(poItem.priceFromPo);
+    const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
+    if (product) {
+      fillProductInRow(idx, product);
+      row.querySelector('.qty-input').value = poQty;
+      if (!useCustomerPrice && poPrice > 0) { row.querySelector('.price-input').value = poPrice; const item = currentItems.find(i => i.idx === idx); if (item) { item.price = poPrice; } }
+      const item = currentItems.find(i => i.idx === idx);
+      if (item) { item.poPrice = poPrice; }
+      updateRowCalculations(idx);
+      return true;
+    }
+    if (row) { row.querySelector('.barcode-input').value = poItem.barcode || ''; row.querySelector('.product-name-input').value = 'غير موجود في المنتجات - راجع الصنف'; row.querySelector('.qty-input').value = poQty; row.querySelector('.price-input').value = poPrice; }
+    const item = currentItems.find(i => i.idx === idx);
+    if (item) { item.barcode = poItem.barcode || ''; item.name = ''; item.qty = poQty; item.price = poPrice; }
+    updateRowCalculations(idx);
+    return false;
+  }
+
+  async function handlePoPdfUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setPoPdfStatus('جاري قراءة ملف الـ P.O...');
+      if (!allProducts.length) await loadProducts();
+      if (!allBranches.length) await loadBranches();
+      if (!allPriceLists.length) await loadPriceLists();
+      const pdfData = await extractTextRowsFromPdf(file);
+      const parsed = parseOscarPoPdfText(pdfData);
+      if (!parsed.poNumber && parsed.items.length === 0) { alert('لم أقدر أقرأ بيانات واضحة من ملف الـ P.O. جرّب PDF أوضح أو ابعته للمراجعة.'); setPoPdfStatus('فشل قراءة بيانات واضحة من الملف', true); return; }
+      if (parsed.poNumber) { document.getElementById('poNumber').value = parsed.poNumber; }
+      const branchSelected = selectCustomerAndBranchFromPo(parsed.branchName);
+      if (parsed.items.length > 0) {
+        const shouldReplace = currentItems.some(i => i.name || i.barcode || safeNumber(i.qty) !== 1 || safeNumber(i.price) > 0) ? confirm('هل تريد استبدال الأصناف الحالية بأصناف الـ P.O؟') : true;
+        if (shouldReplace) clearInvoiceItems();
+        let matchedCount = 0;
+        parsed.items.forEach(poItem => { if (addProductFromPoItem(poItem)) matchedCount++; });
+        setPoPdfStatus(`تم قراءة ${parsed.items.length} صنف من الـ P.O، وتمت مطابقة ${matchedCount} صنف من المنتجات${branchSelected ? '، وتم اختيار الفرع' : ''}.`);
+        if (matchedCount < parsed.items.length) { alert('تمت قراءة الملف، لكن بعض الباركودات غير موجودة في المنتجات. راجع الصفوف المكتوب فيها: غير موجود في المنتجات.'); }
+      } else { setPoPdfStatus('تم قراءة رقم الـ P.O لكن لم يتم العثور على أصناف.', true); }
+      updateSummary();
+    } catch (err) { console.error('PO PDF upload error:', err); alert('حدث خطأ أثناء قراءة ملف الـ P.O PDF'); setPoPdfStatus('حدث خطأ أثناء قراءة الملف', true); } finally { event.target.value = ''; }
+  }
+
+  // ========== Save Invoice ==========
+  async function saveInvoice() {
+    const customerSelect = document.getElementById('customerSelect');
+    const customerId = customerSelect.value;
+    const customerName = customerSelect.options[customerSelect.selectedIndex]?.text || "";
+    const selectedCustomer = allCustomers.find(c => String(c.customer_id || c.id || '').trim() === String(customerId).trim());
+    const vendorNo = getVendorNo(selectedCustomer);
+    const branchSelect = document.getElementById('branchSelect');
+    const branchName = branchSelect?.value || "";
+    const branchLocation = branchSelect?.options[branchSelect.selectedIndex]?.dataset.location || "";
+    if (!customerId) { alert('اختر عميلاً'); return; }
+    if (!branchName) { alert('اختر فرع العميل'); return; }
+    const validItems = currentItems.filter(i => i.name && safeNumber(i.qty) > 0);
+    if (validItems.length === 0) { alert('أضف صنفاً واحداً على الأقل'); return; }
+    const invoiceData = {
+      action: editMode ? 'updateInvoice' : 'saveInvoice',
+      invoice_id: editingInvoiceId,
+      customer_id: customerId,
+      customer_name: customerName,
+      vendor_no: vendorNo,
+      branch_name: branchName,
+      branch_location: branchLocation,
+      date: document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0],
+      po_number: document.getElementById('poNumber').value,
+      tax_invoice_number: document.getElementById('taxInvoiceNumber')?.value || "",
+      discount: safeNumber(document.getElementById('discount').value),
+      paidAmount: safeNumber(document.getElementById('paidAmount').value),
+      paymentMethod: document.getElementById('paymentMethod').value,
+      items: validItems.map(i => ({ barcode: i.barcode, name: i.name, quantity: i.qty, price: i.price, vat_rate: i.vatRate }))
+    };
+    try {
+      const res = await apiCall('saveInvoice', 'POST', invoiceData);
+      if (res.success) { alert(editMode ? "تم تحديث الفاتورة بنجاح" : `تم Save Invoice رقم ${res.serial || res.invoiceId}`); editMode = false; editingInvoiceId = null; location.reload(); } else { alert('خطأ: ' + (res.error || 'فشل Save Invoice')); }
+    } catch (e) { console.error(e); alert('حدث خطأ أثناء Save Invoice'); }
+  }
+
+  // ========== إضافة عميل ==========
+  async function addCustomer() {
+    const name = document.getElementById('newCustomerName').value.trim();
+    if (!name) { alert("اكتب اسم العميل"); return; }
+    try {
+      const res = await apiCall('addCustomer', 'POST', { action: 'addCustomer', name: name, tax_id: document.getElementById('newCustomerTax').value, vendor_no: document.getElementById('newCustomerVendorNo')?.value || "", phone: document.getElementById('newCustomerPhone').value });
+      if (res.success) { alert("تم إضافة العميل"); location.reload(); } else { alert("فشل إضافة العميل"); }
+    } catch (e) { console.error(e); alert("خطأ أثناء إضافة العميل"); }
+  }
+
+  // ========== إضافة منتج ==========
+  async function addProduct() {
+    const name = document.getElementById('newProductName').value.trim();
+    if (!name) { alert("اكتب اسم المنتج"); return; }
+    try {
+      const res = await apiCall('addProduct', 'POST', { action: 'addProduct', name: name, barcode: document.getElementById('newProductBarcode').value, price: safeNumber(document.getElementById('newProductPrice').value), vat_rate: safeNumber(document.getElementById('newProductVat').value), stock: safeNumber(document.getElementById('newProductStock').value) });
+      if (res.success) { alert("تم إضافة المنتج"); location.reload(); } else { alert("فشل إضافة المنتج"); }
+    } catch (e) { console.error(e); alert("خطأ أثناء إضافة المنتج"); }
+  }
+
+  // ========== حفظ الإعدادات ==========
+  async function saveSettings() {
+    const settings = { company_name: document.getElementById('company_name').value, tax_id: document.getElementById('tax_id').value, phone: document.getElementById('phone').value, address: document.getElementById('address').value, company_email: document.getElementById('company_email')?.value || "", logo_url: document.getElementById('logo_url')?.value || "", commercial_register: document.getElementById('commercial_register')?.value || "", invoice_prefix: document.getElementById('invoice_prefix').value, next_invoice_number: document.getElementById('next_invoice_number').value };
+    try {
+      const res = await apiCall('saveSettings', 'POST', { action: 'saveSettings', settings: settings });
+      if (res.success) { alert('تم حفظ الإعدادات'); } else { alert('فشل حفظ الإعدادات'); }
+    } catch (e) { console.error(e); alert('خطأ أثناء حفظ الإعدادات'); }
+  }
+
+  // ========== عرض الفاتورة ==========
+  let currentInvoiceForPrint = null;
+  async function viewInvoice(invoiceId) {
+    try {
+      const data = await apiCall('getInvoiceDetails', 'GET', null, { invoice_id: invoiceId });
+      if (!data.success) { alert(data.error || "تعذر تحميل الفاتورة"); return; }
+      currentInvoiceForPrint = data;
+      const html = buildInvoiceViewHtml(data.invoice, data.items, data.settings || {});
+      document.getElementById('invoicePrintArea').innerHTML = html;
+      const modalEl = document.getElementById('invoiceViewModal');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    } catch (e) { console.error(e); alert("حدث خطأ أثناء عرض الفاتورة"); }
+  }
+
+  function buildInvoiceViewHtml(invoice, items, settings) {
+    const companyName = settings.company_name || "اسم الشركة";
+    const companyTax = settings.tax_id || "";
+    const commercialRegister = settings.commercial_register || "";
+    const companyPhone = settings.phone || "";
+    const companyEmail = settings.company_email || "";
+    const companyAddress = settings.address || "";
+    const logoUrl = settings.logo_url || "";
+    const footerNote = settings.invoice_footer || "شكرًا لتعاملكم معنا";
+    const logoHtml = logoUrl ? `<img src="${escapeHtml(logoUrl)}" class="invoice-logo" alt="Logo">` : `<div style="width:120px;height:70px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999;">Logo</div>`;
+    const rowsHtml = items.map((item, index) => {
+      const quantity = safeNumber(item.quantity);
+      const price = safeNumber(item.price);
+      const vatRate = safeNumber(item.vat_rate);
+      const vatAmount = safeNumber(item.vat_amount);
+      const total = safeNumber(item.total);
+      const gross = quantity * price;
+      return `<tr><td>${index+1}</td><td>${escapeHtml(item.barcode||"")}</td><td style="text-align:right;">${escapeHtml(item.product_name||item.name||"")}</td><td>${quantity}</td><td>${price.toFixed(2)}</td><td>${gross.toFixed(2)}</td><td>${vatRate}%</td><td>${vatAmount.toFixed(2)}</td><td>${total.toFixed(2)}</td></tr>`;
+    }).join("");
+    return `
+      <div class="invoice-header-en"><div class="invoice-logo-side">${logoHtml}</div><div class="invoice-company-en"><h2>${escapeHtml(companyName)}</h2><div>${escapeHtml(companyAddress)}</div><div>Phone: ${escapeHtml(companyPhone)}</div><div>Email: ${escapeHtml(companyEmail)}</div><div>Tax No.: ${escapeHtml(companyTax)}</div><div>Commercial Register: ${escapeHtml(commercialRegister)}</div></div></div>
+      <div class="invoice-title">Sales Invoice</div>
+      <div class="invoice-info-grid"><div class="invoice-info-box" style="direction:ltr;text-align:left;"><h6>Invoice Details</h6><div><strong>Invoice No.:</strong> ${escapeHtml(invoice.invoice_id||"")}</div><div><strong>Tax Invoice No.:</strong> ${escapeHtml(invoice.tax_invoice_number||"")}</div><div><strong>Date:</strong> ${formatDate(invoice.date)}</div><div><strong>P.O No.:</strong> ${escapeHtml(invoice.po_number||"")}</div><div><strong>Status:</strong> ${escapeHtml(invoice.status||"")}</div></div><div class="invoice-info-box" style="direction:ltr;text-align:left;"><h6>Customer Details</h6><div><strong>Customer Name:</strong> ${escapeHtml(invoice.customer_name||"")}</div><div><strong>Customer ID:</strong> ${escapeHtml(invoice.customer_id||"")}</div><div><strong>Branch:</strong> ${escapeHtml(invoice.branch_name||"")}</div><div><strong>Vendor No.:</strong> ${escapeHtml(invoice.vendor_no||invoice.vendor_number||"")}</div></div></div>
+      <table><thead><tr><th>#</th><th>Barcode</th><th>Item Description</th><th>Qty</th><th>Unit Price</th><th>Gross</th><th>VAT %</th><th>VAT Amount</th><th>Total</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+      <div class="invoice-totals"><div class="invoice-totals-row"><span>Subtotal</span><span>${safeNumber(invoice.subtotal).toFixed(2)}</span></div><div class="invoice-totals-row"><span>Total VAT</span><span>${safeNumber(invoice.vat_total).toFixed(2)}</span></div><div class="invoice-totals-row"><span>Discount</span><span>${safeNumber(invoice.discount).toFixed(2)}</span></div><div class="invoice-totals-row"><span>Grand Total</span><span>${safeNumber(invoice.total).toFixed(2)}</span></div><div class="invoice-totals-row"><span>Paid Amount</span><span>${safeNumber(invoice.paid_amount).toFixed(2)}</span></div><div class="invoice-totals-row"><span>Balance Due</span><span>${safeNumber(invoice.remaining_amount).toFixed(2)}</span></div></div>
+      <div class="invoice-footer-note">${escapeHtml(footerNote)}</div>
+    `;
+  }
+
+  function repriceInvoiceItemsForSelectedCustomer() {
+    const useCustomerPrice = document.getElementById('useCustomerPriceForPo')?.checked === true;
+    currentItems.forEach(item => {
+      if (!item.barcode && !item.productId) return;
+      const product = allProducts.find(p => String(p.barcode || '').trim() === String(item.barcode || '').trim() || String(p.product_id || '').trim() === String(item.productId || '').trim());
+      if (!product) return;
+      let finalPrice = 0;
+      if (useCustomerPrice) { finalPrice = getCustomerProductPrice(product); } else if (safeNumber(item.poPrice) > 0) { finalPrice = safeNumber(item.poPrice); } else { finalPrice = safeNumber(product.price); }
+      const row = document.getElementById(`row-${item.idx}`);
+      if (!row) return;
+      row.querySelector('.price-input').value = finalPrice;
+      item.price = finalPrice;
+      updateRowCalculations(item.idx);
+    });
+    updateSummary();
+  }
+
+  function printCurrentInvoice() {
+    const invoicePrintArea = document.getElementById('invoicePrintArea');
+    const printOnlyArea = document.getElementById('printOnlyArea');
+    if (!invoicePrintArea || !invoicePrintArea.innerHTML.trim()) { alert("لا توجد فاتورة للطباعة"); return; }
+    if (!printOnlyArea) { alert("منطقة الطباعة غير موجودة"); return; }
+    printOnlyArea.innerHTML = `<div class="invoice-view-box">${invoicePrintArea.innerHTML}</div>`;
+    setTimeout(() => { window.print(); }, 300);
+  }
+
+  async function loadInvoiceForEdit(invoiceId) {
+    try {
+      const data = await apiCall('getInvoiceDetails', 'GET', null, { invoice_id: invoiceId });
+      if (!data.success) { alert(data.error || "تعذر تحميل الفاتورة للتعديل"); return; }
+      editMode = true; editingInvoiceId = invoiceId;
+      const invoice = data.invoice; const items = data.items || [];
+      const tabTrigger = document.querySelector('a[href="#newInvoiceTab"]');
+      if (tabTrigger) { const tab = new bootstrap.Tab(tabTrigger); tab.show(); }
+      document.getElementById('customerSelect').value = invoice.customer_id || "";
+      updateBranchesForCustomer(invoice.customer_id || "");
+      setTimeout(() => { const branchSelect = document.getElementById('branchSelect'); if (branchSelect) { branchSelect.value = invoice.branch_name || ""; } }, 200);
+      const invoiceDate = document.getElementById('invoiceDate');
+      if (invoiceDate && invoice.date) { const d = new Date(invoice.date); if (!isNaN(d.getTime())) { invoiceDate.value = d.toISOString().split('T')[0]; } }
+      document.getElementById('poNumber').value = invoice.po_number || "";
+      document.getElementById('taxInvoiceNumber').value = invoice.tax_invoice_number || "";
+      document.getElementById('discount').value = safeNumber(invoice.discount);
+      document.getElementById('paidAmount').value = safeNumber(invoice.paid_amount);
+      document.getElementById('itemsTbody').innerHTML = "";
+      currentItems = []; nextItemIndex = 0;
+      items.forEach(item => {
+        addEmptyInvoiceRow();
+        const idx = nextItemIndex - 1;
+        const row = document.getElementById(`row-${idx}`);
+        if (row) {
+          row.querySelector('.barcode-input').value = item.barcode || "";
+          row.querySelector('.product-name-input').value = item.product_name || item.name || "";
+          row.querySelector('.qty-input').value = safeNumber(item.quantity);
+          row.querySelector('.price-input').value = safeNumber(item.price);
+          row.querySelector('.vat-input').value = safeNumber(item.vat_rate);
+          const currentItem = currentItems.find(i => i.idx === idx);
+          if (currentItem) { currentItem.barcode = item.barcode || ""; currentItem.name = item.product_name || item.name || ""; currentItem.qty = safeNumber(item.quantity); currentItem.price = safeNumber(item.price); currentItem.vatRate = safeNumber(item.vat_rate); }
+          updateRowCalculations(idx);
+        }
+      });
+      if (items.length === 0) { addEmptyInvoiceRow(); }
+      const saveBtn = document.getElementById('saveInvoiceBtn');
+      if (saveBtn) { saveBtn.innerText = "تحديث الفاتورة"; saveBtn.classList.remove("btn-primary"); saveBtn.classList.add("btn-warning"); }
+      updateSummary();
+    } catch (e) { console.error(e); alert("حدث خطأ أثناء تحميل الفاتورة للتعديل"); }
+  }
+
+  function updateBranchesForCustomer(customerId) {
+    const branchSelect = document.getElementById('branchSelect');
+    if (!branchSelect) return;
+    branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+    if (!customerId) return;
+    const customerBranches = allBranches.filter(b => String(b.customer_id).trim() === String(customerId).trim());
+    if (customerBranches.length === 0) { branchSelect.innerHTML = '<option value="">لا توجد فروع لهذا العميل</option>'; return; }
+    customerBranches.forEach(branch => {
+      const option = document.createElement('option');
+      option.value = branch.branch_name;
+      option.textContent = branch.branch_name;
+      option.dataset.location = branch.location_link || "";
+      branchSelect.appendChild(option);
+    });
+  }
+
+  // ========== أزرار مؤقتة ==========
+  window.viewInvoice = viewInvoice;
+  window.editInvoice = async function(id) { await loadInvoiceForEdit(id); };
+  window.printInvoice = async function(id) { await viewInvoice(id); setTimeout(() => { printCurrentInvoice(); }, 1000); };
 
   // ========== بدء التشغيل ==========
   window.addEventListener('DOMContentLoaded', async function() {
@@ -932,18 +1284,9 @@
     if (todayDate) todayDate.innerText = new Date().toLocaleDateString('ar-EG');
 
     const customerSelect = document.getElementById('customerSelect');
-    if (customerSelect) {
-      customerSelect.addEventListener('change', function() {
-        updateBranchesForCustomer(this.value);
-        repriceInvoiceItemsForSelectedCustomer();
-      });
-    }
+    if (customerSelect) { customerSelect.addEventListener('change', function() { updateBranchesForCustomer(this.value); repriceInvoiceItemsForSelectedCustomer(); }); }
     const useCustomerPriceForPo = document.getElementById('useCustomerPriceForPo');
-    if (useCustomerPriceForPo) {
-      useCustomerPriceForPo.addEventListener('change', function() {
-        repriceInvoiceItemsForSelectedCustomer();
-      });
-    }
+    if (useCustomerPriceForPo) { useCustomerPriceForPo.addEventListener('change', function() { repriceInvoiceItemsForSelectedCustomer(); }); }
     const searchBranch = document.getElementById('searchBranch');
     if (searchBranch) { searchBranch.addEventListener('input', function() { renderBranchesTable(allBranches); }); }
     const addItemBtn = document.getElementById('addItemBtn');
@@ -955,21 +1298,9 @@
     const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
     if (saveInvoiceBtn) { saveInvoiceBtn.addEventListener('click', function(e) { e.preventDefault(); saveInvoice(); }); }
     const discountInput = document.getElementById('discount');
-    if (discountInput) {
-      discountInput.addEventListener('input', function() {
-        const discountVatCheckbox = document.getElementById('discountVatCheckbox');
-        if (discountVatCheckbox?.checked) { discountVatCheckbox.checked = false; }
-        updateSummary();
-      });
-    }
+    if (discountInput) { discountInput.addEventListener('input', function() { const discountVatCheckbox = document.getElementById('discountVatCheckbox'); if (discountVatCheckbox?.checked) { discountVatCheckbox.checked = false; } updateSummary(); }); }
     const discountVatCheckbox = document.getElementById('discountVatCheckbox');
-    if (discountVatCheckbox) {
-      discountVatCheckbox.addEventListener('change', function() {
-        const discountInput = document.getElementById('discount');
-        if (this.checked) { let totalVat = 0; currentItems.forEach(i => { totalVat += safeNumber(i.vatAmount); }); if (discountInput) { discountInput.value = totalVat.toFixed(2); } } else { if (discountInput) { discountInput.value = 0; } }
-        updateSummary();
-      });
-    }
+    if (discountVatCheckbox) { discountVatCheckbox.addEventListener('change', function() { const discountInput = document.getElementById('discount'); if (this.checked) { let totalVat = 0; currentItems.forEach(i => { totalVat += safeNumber(i.vatAmount); }); if (discountInput) { discountInput.value = totalVat.toFixed(2); } } else { if (discountInput) { discountInput.value = 0; } } updateSummary(); }); }
     const searchCustomer = document.getElementById('searchCustomer');
     if (searchCustomer) { searchCustomer.addEventListener('input', function() { renderCustomersTable(allCustomers); }); }
     const searchProduct = document.getElementById('searchProduct');
@@ -999,6 +1330,5 @@
     console.log("App loaded");
   });
 </script>
-
 </body>
 </html>
